@@ -758,9 +758,10 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 20),
 
                         // ================= REGISTER =================
-                        Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 5,
                           children: [
                             const Text(
                               'Belum terdaftar sebagai Siswa?',
@@ -769,8 +770,6 @@ class _LoginPageState extends State<LoginPage> {
                                 color: secondaryText,
                               ),
                             ),
-
-                            const SizedBox(width: 5),
 
                             TextButton(
                               onPressed: () {
