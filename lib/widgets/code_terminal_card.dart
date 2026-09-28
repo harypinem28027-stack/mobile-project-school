@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/case_study.dart';
+import '../models/code_line.dart';
 import '../theme/app_colors.dart';
 
 /// Kartu kode bergaya "terminal gelap" dengan title bar (dot merah/kuning/

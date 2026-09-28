@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import '../pages/home_page.dart';
 import '../pages/lab_test_page.dart';
 import '../pages/progres_page.dart';
-import '../pages/studi_kasus_page.dart';
+import '../pages/test_page.dart';
 import '../theme/app_colors.dart';
 
 /// Satu sumber data untuk semua tab bottom navigation.
 /// Tambah/ubah menu cukup di sini, semua halaman ikut update.
 const List<_NavItem> _kNavItems = [
   _NavItem(icon: Icons.menu_book, label: 'Modul'),
-  _NavItem(icon: Icons.pest_control_outlined, label: 'Studi Kasus'),
+  _NavItem(icon: Icons.quiz_outlined, label: 'Kuis'),
   _NavItem(icon: Icons.science_outlined, label: 'Lab Test'),
   _NavItem(icon: Icons.insights_outlined, label: 'Progres'),
 ];
@@ -34,7 +34,7 @@ class AppBottomNav extends StatelessWidget {
     if (index == currentIndex) return;
     final pages = <Widget>[
       const HomePage(),
-      const StudiKasusPage(),
+      const TestPage(),
       const LabTestPage(),
       const ProgresPage(),
     ];
