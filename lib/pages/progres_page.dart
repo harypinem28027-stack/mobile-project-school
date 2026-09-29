@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/bug_note_data.dart';
 import '../models/bug_note.dart';
 import '../models/learning_module.dart';
+import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/category_pills.dart';
 import '../widgets/main_scaffold.dart';
@@ -10,6 +11,7 @@ import '../widgets/progress/bug_note_card.dart';
 import '../widgets/progress/progress_stat_grid.dart';
 import '../widgets/progress/student_profile_card.dart';
 import '../widgets/progress/weekly_activity_card.dart';
+import 'login_page.dart';
 
 const List<CategoryPill> _kBugFilterPills = [
   CategoryPill(label: 'Semua Catatan', value: 'all'),
@@ -44,6 +46,36 @@ class _ProgresPageState extends State<ProgresPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         margin: const EdgeInsets.only(bottom: 80, left: 40, right: 40),
       ),
+    );
+  }
+
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Keluar Akun?'),
+        content: const Text('Kamu perlu login ulang untuk mengakses DebugTIK lagi.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Keluar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    await AuthService.logout();
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
     );
   }
 
@@ -121,6 +153,14 @@ class _ProgresPageState extends State<ProgresPage> {
                 side: const BorderSide(color: AppColors.slate300),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Center(
+            child: TextButton.icon(
+              onPressed: _confirmLogout,
+              icon: const Icon(Icons.logout, size: 18, color: Colors.red),
+              label: const Text('Keluar Akun', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
             ),
           ),
         ],

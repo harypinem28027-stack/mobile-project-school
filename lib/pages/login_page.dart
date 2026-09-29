@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'register_page.dart';
+import 'home_page.dart';
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -44,11 +46,23 @@ class _LoginPageState extends State<LoginPage> {
       isLoading = false;
     });
 
+    await AuthService.login(
+      name: emailController.text.trim(),
+      studentId: emailController.text.trim(),
+    );
+
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Berhasil masuk!'),
         backgroundColor: Colors.green,
       ),
+    );
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomePage()),
+      (route) => false,
     );
   }
 

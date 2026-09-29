@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'pages/home_page.dart';
+import 'pages/splash_page.dart';
 import 'theme/app_colors.dart';
 
 void main() {
@@ -21,7 +21,7 @@ class DebugTikApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.slate50,
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.sky600),
       ),
-      home: const HomePage(),
+      home: const SplashPage(),
     );
   }
 }
