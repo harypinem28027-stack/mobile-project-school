@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_project/data/user_profile.dart';
 
 import 'pages/splash_page.dart';
 import 'theme/app_colors.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await UserProfile.instance.load();
   runApp(const DebugTikApp());
 }
 

@@ -21,9 +21,6 @@ class _RegisterPageState extends State<RegisterPage> {
   static const Color primary = Color(0xFF006194);
   static const Color primaryContainer = Color(0xFF007BB9);
 
-  static const Color secondary = Color(0xFF006591);
-  static const Color secondaryFixed = Color(0xFFC9E6FF);
-
   static const Color tertiary = Color(0xFF006947);
   static const Color tertiaryFixed = Color(0xFF6FFBBE);
 
@@ -47,8 +44,6 @@ class _RegisterPageState extends State<RegisterPage> {
   // ============================================================
   // STATE
   // ============================================================
-
-  String selectedPath = 'frontend';
 
   bool obscurePassword = true;
   bool obscureConfirm = true;
@@ -518,104 +513,6 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ],
       ],
-    );
-  }
-
-  // ============================================================
-  // LEARNING PATH
-  // ============================================================
-
-  Widget _buildPathOption({
-    required String value,
-    required String title,
-    required String description,
-    required IconData icon,
-  }) {
-    final bool selected = selectedPath == value;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: () {
-        setState(() {
-          selectedPath = value;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        margin: const EdgeInsets.only(bottom: 9),
-        padding: const EdgeInsets.all(13),
-        decoration: BoxDecoration(
-          color: selected
-              ? secondaryFixed
-              : surfaceContainerLow,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: selected
-                ? primary
-                : outline.withOpacity(0.18),
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: selected
-                    ? Colors.white.withOpacity(0.75)
-                    : surfaceContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                size: 18,
-                color: primary,
-              ),
-            ),
-
-            const SizedBox(width: 11),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: onSurface,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: onSurfaceVariant,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 8),
-
-            Icon(
-              selected
-                  ? Icons.check_circle
-                  : Icons.radio_button_unchecked,
-              color: selected ? primary : outline,
-              size: 21,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
