@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_project/data/user_profile.dart';
 
 import '../data/bug_note_data.dart';
 import '../models/bug_note.dart';
@@ -31,6 +32,22 @@ class ProgresPage extends StatefulWidget {
 
 class _ProgresPageState extends State<ProgresPage> {
   String _selectedFilter = 'all';
+
+  @override
+  void initState() {
+    super.initState();
+    UserProfile.instance.addListener(_onProfileChanged);
+  }
+
+  void _onProfileChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    UserProfile.instance.removeListener(_onProfileChanged);
+    super.dispose();
+  }
 
   List<BugNote> get _filteredNotes {
     if (_selectedFilter == 'all') return kBugNotes;
@@ -89,7 +106,11 @@ class _ProgresPageState extends State<ProgresPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
-          const StudentProfileCard(),
+          StudentProfileCard(
+            studentName: UserProfile.instance.name,
+            studentEmail: UserProfile.instance.email,
+            avatar: UserProfile.instance.avatar,
+          ),
           const SizedBox(height: 14),
           const ProgressStatGrid(),
           const SizedBox(height: 14),

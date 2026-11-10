@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_project/data/user_profile.dart';
 
 import '../data/module_data.dart';
 import '../models/learning_module.dart';
@@ -24,6 +25,16 @@ class _HomePageState extends State<HomePage> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    UserProfile.instance.addListener(_onProfileChanged);
+  }
+
+  void _onProfileChanged() {
+    if (mounted) setState(() {});
+  }
+
   List<LearningModule> get _filteredModules {
     return kModules.where((m) {
       final matchCat = _selectedCategory == 'all' || m.category == _selectedCategory;
@@ -35,6 +46,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    UserProfile.instance.removeListener(_onProfileChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -42,13 +54,17 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final modules = _filteredModules;
+    final profileName = UserProfile.instance.name.trim();
+    final displayName = profileName.isEmpty
+        ? 'Siswa'
+        : profileName.split(RegExp(r'\s+')).first;
 
     return MainScaffold(
       currentIndex: 0,
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
-          const GreetingSection(),
+          GreetingSection(userName: displayName),
           const SizedBox(height: 16),
           const TeacherBannerCard(),
           const SizedBox(height: 16),
