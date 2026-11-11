@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_project/data/user_profile.dart';
 
 import 'firebase_options.dart';
 import 'pages/splash_page.dart';
@@ -17,6 +18,7 @@ Future<void> main() async {
     // Offline saat pertama buka: tidak apa-apa, dicoba lagi nanti.
   }
 
+  await UserProfile.instance.load();
   runApp(const DebugTikApp());
 }
 
