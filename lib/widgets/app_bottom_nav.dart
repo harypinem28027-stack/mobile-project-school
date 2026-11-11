@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../pages/home_page.dart';
 import '../pages/lab_test_page.dart';
+import '../pages/leaderboard_page.dart';
 import '../pages/progres_page.dart';
 import '../pages/test_page.dart';
 import '../theme/app_colors.dart';
@@ -13,6 +14,7 @@ const List<_NavItem> _kNavItems = [
   _NavItem(icon: Icons.quiz_outlined, label: 'Kuis'),
   _NavItem(icon: Icons.science_outlined, label: 'Lab Test'),
   _NavItem(icon: Icons.insights_outlined, label: 'Progres'),
+  _NavItem(icon: Icons.emoji_events_outlined, label: 'Peringkat'),
 ];
 
 class _NavItem {
@@ -24,7 +26,7 @@ class _NavItem {
 /// Bottom navigation bar reusable.
 ///
 /// Cukup panggil `AppBottomNav(currentIndex: 0)` di [MainScaffold] mana pun,
-/// widget ini sudah tahu sendiri cara pindah halaman (index 0-3).
+/// widget ini sudah tahu sendiri cara pindah halaman (index 0-4).
 class AppBottomNav extends StatelessWidget {
   final int currentIndex;
 
@@ -37,10 +39,10 @@ class AppBottomNav extends StatelessWidget {
       const TestPage(),
       const LabTestPage(),
       const ProgresPage(),
+      const LeaderboardPage(),
     ];
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => pages[index]),
-    );
+    Navigator.of(context)
+        .pushReplacement(MaterialPageRoute(builder: (_) => pages[index]));
   }
 
   @override
@@ -73,10 +75,10 @@ class AppBottomNav extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 10,
-                      color:
-                          isActive ? AppColors.sky600 : AppColors.slate600,
-                      fontWeight:
-                          isActive ? FontWeight.w600 : FontWeight.normal,
+                      color: isActive ? AppColors.sky600 : AppColors.slate600,
+                      fontWeight: isActive
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 ],

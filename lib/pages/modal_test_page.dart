@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/quiz.dart';
+import '../services/leaderboard_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/code_terminal_card.dart';
 
@@ -15,7 +16,11 @@ class ModalTestPage extends StatefulWidget {
   final QuizModule module;
   final bool reviewMode;
 
-  const ModalTestPage({super.key, required this.module, this.reviewMode = false});
+  const ModalTestPage({
+    super.key,
+    required this.module,
+    this.reviewMode = false,
+  });
 
   @override
   State<ModalTestPage> createState() => _ModalTestPageState();
@@ -61,6 +66,7 @@ class _ModalTestPageState extends State<ModalTestPage> {
       if (widget.reviewMode) {
         Navigator.of(context).pop();
       } else {
+        _submitScore(); // kirim nilai ke leaderboard
         setState(() => _mode = _ViewMode.result);
       }
       return;
@@ -88,6 +94,19 @@ class _ModalTestPageState extends State<ModalTestPage> {
     });
   }
 
+  /// Kirim nilai ke leaderboard. Hanya kenaikan nilai terbaik yang dihitung,
+  /// jadi mengulang kuis tidak menggandakan poin.
+  void _submitScore() {
+    final total = _questions.length;
+    final scorePercent = ((_correctCount / total) * 100).round();
+    LeaderboardService()
+        .submitQuizResult(
+          materialId: widget.module.materialId,
+          score: scorePercent,
+        )
+        .catchError((_) {}); // abaikan error, mis. saat offline
+  }
+
   void _restart() {
     setState(() {
       _index = 0;
@@ -108,7 +127,9 @@ class _ModalTestPageState extends State<ModalTestPage> {
             _buildTopBar(),
             if (_mode == _ViewMode.attempt) _buildProgressBar(),
             Expanded(
-              child: _mode == _ViewMode.result ? _buildResultView() : _buildQuestionView(),
+              child: _mode == _ViewMode.result
+                  ? _buildResultView()
+                  : _buildQuestionView(),
             ),
           ],
         ),
@@ -133,10 +154,16 @@ class _ModalTestPageState extends State<ModalTestPage> {
           ),
           Expanded(
             child: Text(
-              widget.reviewMode ? 'Pembahasan: ${widget.module.title}' : widget.module.title,
+              widget.reviewMode
+                  ? 'Pembahasan: ${widget.module.title}'
+                  : widget.module.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.slate900),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.slate900,
+              ),
             ),
           ),
           if (_mode == _ViewMode.attempt)
@@ -144,7 +171,11 @@ class _ModalTestPageState extends State<ModalTestPage> {
               padding: const EdgeInsets.only(right: 12),
               child: Text(
                 'Soal ${_index + 1}/${_questions.length}',
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: AppColors.slate500),
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  color: AppColors.slate500,
+                ),
               ),
             ),
         ],
@@ -179,7 +210,12 @@ class _ModalTestPageState extends State<ModalTestPage> {
                   children: [
                     Text(
                       _current.prompt,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.slate900, height: 1.4),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.slate900,
+                        height: 1.4,
+                      ),
                     ),
                     if (_current.codeSnippet != null) ...[
                       const SizedBox(height: 12),
@@ -191,7 +227,10 @@ class _ModalTestPageState extends State<ModalTestPage> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    ...List.generate(_current.options.length, (i) => _optionTile(i)),
+                    ...List.generate(
+                      _current.options.length,
+                      (i) => _optionTile(i),
+                    ),
                     if (_confirmed) ...[
                       const SizedBox(height: 8),
                       _explanationBox(),
@@ -248,7 +287,10 @@ class _ModalTestPageState extends State<ModalTestPage> {
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: border, width: isSelected || (_confirmed && isCorrect) ? 1.5 : 1),
+            border: Border.all(
+              color: border,
+              width: isSelected || (_confirmed && isCorrect) ? 1.5 : 1,
+            ),
           ),
           child: Row(
             children: [
@@ -257,16 +299,33 @@ class _ModalTestPageState extends State<ModalTestPage> {
                 height: 26,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected || (_confirmed && isCorrect) ? fg.withOpacity(0.12) : AppColors.slate100,
+                  color: isSelected || (_confirmed && isCorrect)
+                      ? fg.withOpacity(0.12)
+                      : AppColors.slate100,
                   shape: BoxShape.circle,
                 ),
-                child: Text(letter, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
+                child: Text(
+                  letter,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: fg,
+                  ),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(_current.options[i], style: TextStyle(fontSize: 13, color: fg, fontWeight: FontWeight.w500)),
+                child: Text(
+                  _current.options[i],
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: fg,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-              if (trailingIcon != null) Icon(trailingIcon, size: 18, color: trailingColor),
+              if (trailingIcon != null)
+                Icon(trailingIcon, size: 18, color: trailingColor),
             ],
           ),
         ),
@@ -282,16 +341,28 @@ class _ModalTestPageState extends State<ModalTestPage> {
       decoration: BoxDecoration(
         color: isCorrect ? AppColors.emerald50 : AppColors.amber50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isCorrect ? AppColors.emerald200 : AppColors.amber200),
+        border: Border.all(
+          color: isCorrect ? AppColors.emerald200 : AppColors.amber200,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(isCorrect ? Icons.verified : Icons.lightbulb, size: 18, color: isCorrect ? AppColors.emerald700 : AppColors.amber800),
+          Icon(
+            isCorrect ? Icons.verified : Icons.lightbulb,
+            size: 18,
+            color: isCorrect ? AppColors.emerald700 : AppColors.amber800,
+          ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(_current.explanation,
-                style: TextStyle(fontSize: 12, height: 1.5, color: isCorrect ? AppColors.emerald700 : AppColors.amber900)),
+            child: Text(
+              _current.explanation,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.5,
+                color: isCorrect ? AppColors.emerald700 : AppColors.amber900,
+              ),
+            ),
           ),
         ],
       ),
@@ -301,7 +372,10 @@ class _ModalTestPageState extends State<ModalTestPage> {
   Widget _buildBottomActionBar() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: AppColors.slate200))),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: AppColors.slate200)),
+      ),
       child: SafeArea(
         top: false,
         child: Row(
@@ -312,11 +386,20 @@ class _ModalTestPageState extends State<ModalTestPage> {
                 child: OutlinedButton(
                   onPressed: _goPrev,
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     side: const BorderSide(color: AppColors.slate300),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Icon(Icons.arrow_back, size: 18, color: AppColors.slate600),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    size: 18,
+                    color: AppColors.slate600,
+                  ),
                 ),
               ),
             Expanded(
@@ -328,9 +411,17 @@ class _ModalTestPageState extends State<ModalTestPage> {
                     backgroundColor: widget.module.accentColor,
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: AppColors.slate200,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: Text(_primaryButtonLabel(), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                  child: Text(
+                    _primaryButtonLabel(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -372,18 +463,30 @@ class _ModalTestPageState extends State<ModalTestPage> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: passed ? AppColors.emerald50 : AppColors.amber50,
-                  border: Border.all(color: passed ? AppColors.emerald200 : AppColors.amber200, width: 3),
+                  border: Border.all(
+                    color: passed ? AppColors.emerald200 : AppColors.amber200,
+                    width: 3,
+                  ),
                 ),
                 child: Center(
-                  child: Text('$scorePercent',
-                      style: TextStyle(
-                          fontSize: 32, fontWeight: FontWeight.w800, color: passed ? AppColors.emerald700 : AppColors.amber800)),
+                  child: Text(
+                    '$scorePercent',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: passed ? AppColors.emerald700 : AppColors.amber800,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 passed ? 'Kuis Tuntas! 🎉' : 'Belum Mencapai KKM',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.slate900),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.slate900,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
@@ -397,11 +500,16 @@ class _ModalTestPageState extends State<ModalTestPage> {
                 child: ElevatedButton.icon(
                   onPressed: _restart,
                   icon: const Icon(Icons.replay, size: 18),
-                  label: const Text('Ulangi Kuis', style: TextStyle(fontWeight: FontWeight.w700)),
+                  label: const Text(
+                    'Ulangi Kuis',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.module.accentColor,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -414,9 +522,14 @@ class _ModalTestPageState extends State<ModalTestPage> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.slate700,
                     side: const BorderSide(color: AppColors.slate300),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text('Kembali ke Daftar Kuis', style: TextStyle(fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'Kembali ke Daftar Kuis',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ],

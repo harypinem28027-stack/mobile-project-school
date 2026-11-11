@@ -1,11 +1,23 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_project/data/user_profile.dart';
 
+import 'firebase_options.dart';
 import 'pages/splash_page.dart';
+import 'services/leaderboard_service.dart';
 import 'theme/app_colors.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Login anonim di belakang layar, supaya leaderboard bisa dibaca/ditulis.
+  try {
+    await LeaderboardService().ensureSignedIn();
+  } catch (_) {
+    // Offline saat pertama buka: tidak apa-apa, dicoba lagi nanti.
+  }
+
   await UserProfile.instance.load();
   runApp(const DebugTikApp());
 }

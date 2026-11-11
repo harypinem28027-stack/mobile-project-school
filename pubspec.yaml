@@ -37,6 +37,9 @@ dependencies:
   flutter_inappwebview: ^6.1.5
   webview_flutter: ^4.7.0
   shared_preferences: ^2.5.5
+  firebase_core: ^5.1.0
+  firebase_auth: ^7.0.1
+  cloud_firestore: ^7.1.0
 
 dev_dependencies:
   flutter_test:
@@ -88,5 +91,5 @@ flutter:
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #
-  # For details regarding fonts from package dependencies,
+  # For details regarding fonts from package,
   # see https://flutter.dev/to/font-from-package
