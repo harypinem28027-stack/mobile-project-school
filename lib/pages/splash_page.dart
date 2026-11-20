@@ -9,7 +9,7 @@ import 'login_page.dart';
 /// tujuan pertama — langsung ke HomePage (kalau sudah pernah login)
 /// atau ke LoginPage (kalau belum). Dipakai sebagai `home:` di main.dart.
 class SplashPage extends StatefulWidget {
-  const SplashPage({super.key});
+  SplashPage({super.key});
 
   @override
   State<SplashPage> createState() => _SplashPageState();
@@ -28,7 +28,7 @@ class _SplashPageState extends State<SplashPage> {
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => loggedIn ? const HomePage() : const LoginPage(),
+        builder: (_) => loggedIn ? HomePage() : LoginPage(),
       ),
     );
   }
@@ -45,12 +45,12 @@ class _SplashPageState extends State<SplashPage> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(color: AppColors.sky600, borderRadius: BorderRadius.circular(16)),
-              child: const Icon(Icons.terminal, color: Colors.white, size: 30),
+              child: Icon(Icons.terminal, color: Colors.white, size: 30),
             ),
-            const SizedBox(height: 16),
-            const Text('DebugTIK', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.slate900)),
-            const SizedBox(height: 20),
-            const SizedBox(
+            SizedBox(height: 16),
+            Text('DebugTIK', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.slate900)),
+            SizedBox(height: 20),
+            SizedBox(
               width: 22,
               height: 22,
               child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.sky600),

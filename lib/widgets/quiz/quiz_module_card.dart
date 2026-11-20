@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../models/quiz.dart';
 import '../../theme/app_colors.dart';
+import '../glass_morphism_box.dart';
 
-/// Kartu satu modul kuis. Tampilannya berbeda tergantung [QuizStatus]:
-/// - completed: nilai + tombol Pembahasan/Ulangi Kuis
-/// - newChallenge: badge "wajib" + tombol besar Mulai Kuis
-/// - needsImprovement: nilai + tombol Perbaiki Nilai
+/// Kartu satu modul kuis bergaya Liquid Glass membulat.
 class QuizModuleCard extends StatelessWidget {
   final QuizModule module;
   final VoidCallback onStart;
@@ -21,26 +19,19 @@ class QuizModuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isNew = module.status == QuizStatus.newChallenge;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(isNew ? 0.06 : 0.04), blurRadius: isNew ? 10 : 6),
-        ],
-      ),
+    return GlassMorphismBox(
+      borderRadius: 28,
+      opacity: 0.46,
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeaderRow(),
-          const SizedBox(height: 10),
-          _buildDetailChips(),
-          const SizedBox(height: 10),
-          _buildTopicBox(),
           const SizedBox(height: 12),
+          _buildDetailChips(),
+          const SizedBox(height: 12),
+          _buildTopicBox(),
+          const SizedBox(height: 14),
           _buildActions(),
         ],
       ),
@@ -57,16 +48,28 @@ class QuizModuleCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(module.materialId,
-                      style: TextStyle(
-                          fontFamily: 'monospace', fontSize: 11, fontWeight: FontWeight.w700, color: module.accentColor)),
-                  const SizedBox(width: 6),
+                  Text(
+                    module.materialId,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: module.accentColor,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   _statusBadge(),
                 ],
               ),
-              const SizedBox(height: 3),
-              Text(module.title,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.slate900)),
+              const SizedBox(height: 5),
+              Text(
+                module.title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.slate900,
+                ),
+              ),
             ],
           ),
         ),
@@ -76,44 +79,97 @@ class QuizModuleCard extends StatelessWidget {
   }
 
   Widget _statusBadge() {
+    final isDark = AppColors.isDark;
     switch (module.status) {
       case QuizStatus.completed:
-        return _pill('STATUS: SELESAI', bg: AppColors.emerald50, fg: AppColors.emerald700);
+        return _pill(
+          'STATUS: SELESAI',
+          bg: AppColors.emerald50.withOpacity(0.92),
+          fg: AppColors.emerald700,
+          border: AppColors.emerald200,
+        );
       case QuizStatus.newChallenge:
-        return _pill('TANTANGAN BARU', bg: AppColors.sky600, fg: Colors.white);
+        return _pill(
+          'TANTANGAN BARU',
+          bg: AppColors.sky600,
+          fg: Colors.white,
+          border: AppColors.sky600,
+        );
       case QuizStatus.needsImprovement:
-        return _pill('EVALUASI DRAF', bg: AppColors.slate100, fg: AppColors.slate700);
+        return _pill(
+          'EVALUASI DRAF',
+          bg: isDark
+              ? const Color(0xFF1E293B).withOpacity(0.9)
+              : Colors.white.withOpacity(0.75),
+          fg: AppColors.slate700,
+          border: AppColors.slate200,
+        );
     }
   }
 
-  Widget _pill(String text, {required Color bg, required Color fg}) {
+  Widget _pill(
+    String text, {
+    required Color bg,
+    required Color fg,
+    required Color border,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(text, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: fg, letterSpacing: 0.3)),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: border),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.3,
+        ),
+      ),
     );
   }
 
   Widget _scoreColumn() {
-    final color = module.status == QuizStatus.completed ? AppColors.emerald700 : AppColors.sky700;
+    final color = module.status == QuizStatus.completed
+        ? AppColors.emerald700
+        : AppColors.sky700;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text.rich(
           TextSpan(
             text: '${module.score}',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: color, height: 1),
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.w800,
+              color: color,
+              height: 1,
+            ),
             children: [
-              const TextSpan(text: '/100', style: TextStyle(fontSize: 11, color: AppColors.slate500, fontWeight: FontWeight.normal)),
+              TextSpan(
+                text: '/100',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.slate500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Text(
           module.status == QuizStatus.completed
               ? '${module.correctCount}/${module.totalQuestions} Benar'
               : 'Perlu Peningkatan',
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
         ),
       ],
     );
@@ -121,68 +177,134 @@ class QuizModuleCard extends StatelessWidget {
 
   Widget _buildDetailChips() {
     final chips = <Widget>[
-      _detailChip(Icons.format_list_numbered, '${module.totalQuestions} Butir Soal'),
-      _detailChip(Icons.timer, 'Est. ${module.estimatedMinutes} Menit'),
+      _detailChip(
+        Icons.format_list_numbered_rounded,
+        '${module.totalQuestions} Butir Soal',
+      ),
+      _detailChip(
+        Icons.timer_outlined,
+        'Est. ${module.estimatedMinutes} Menit',
+      ),
     ];
     if (module.status == QuizStatus.newChallenge) {
-      chips.add(_detailChip(Icons.new_releases, 'Belum Dikerjakan', color: AppColors.sky600));
+      chips.add(
+        _detailChip(
+          Icons.new_releases_rounded,
+          'Belum Dikerjakan',
+          color: AppColors.sky600,
+        ),
+      );
     } else {
-      chips.add(_detailChip(Icons.flag, 'KKM ${module.kkmPercent}%'));
+      chips.add(_detailChip(Icons.flag_rounded, 'KKM ${module.kkmPercent}%'));
     }
     return Wrap(spacing: 8, runSpacing: 8, children: chips);
   }
 
   Widget _detailChip(IconData icon, String label, {Color? color}) {
+    final isDark = AppColors.isDark;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(6)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF1E293B).withOpacity(0.75)
+            : Colors.white.withOpacity(0.58),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.slate200.withOpacity(0.9)),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color ?? AppColors.slate500),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 11, color: color ?? AppColors.slate600)),
+          Icon(icon, size: 14, color: color ?? AppColors.slate600),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color ?? AppColors.slate700,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildTopicBox() {
+    final isDark = AppColors.isDark;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF0F172A).withOpacity(0.65)
+            : Colors.white.withOpacity(0.46),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.slate200.withOpacity(0.85)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(module.topicLabel.toUpperCase(),
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.slate500, letterSpacing: 0.3)),
-          const SizedBox(height: 4),
+          Text(
+            module.topicLabel.toUpperCase(),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: AppColors.slate500,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 6),
           if (module.topicChips.isNotEmpty)
             Wrap(
-              spacing: 4,
-              runSpacing: 4,
+              spacing: 5,
+              runSpacing: 5,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 ...module.topicChips.map(
                   (c) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: AppColors.slate100, borderRadius: BorderRadius.circular(4)),
-                    child: Text(c, style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: AppColors.slate800)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF1E293B)
+                          : Colors.white.withOpacity(0.82),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: AppColors.slate200),
+                    ),
+                    child: Text(
+                      c,
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.sky700 : AppColors.slate800,
+                      ),
+                    ),
                   ),
                 ),
                 if (module.topicNote != null)
-                  Text(module.topicNote!, style: const TextStyle(fontSize: 11, color: AppColors.slate500)),
+                  Text(
+                    module.topicNote!,
+                    style: TextStyle(fontSize: 11.5, color: AppColors.slate600),
+                  ),
               ],
             )
           else if (module.topicNote != null)
-            Text(module.topicNote!, style: const TextStyle(fontSize: 12, color: AppColors.slate700, height: 1.4)),
+            Text(
+              module.topicNote!,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.slate700,
+                height: 1.45,
+              ),
+            ),
         ],
       ),
     );
   }
 
   Widget _buildActions() {
+    final isDark = AppColors.isDark;
     switch (module.status) {
       case QuizStatus.completed:
         return Row(
@@ -190,13 +312,21 @@ class QuizModuleCard extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: onReview,
-                icon: const Icon(Icons.history_edu, size: 17),
-                label: const Text('Pembahasan'),
+                icon: const Icon(Icons.history_edu_rounded, size: 17),
+                label: const Text(
+                  'Pembahasan',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+                ),
                 style: OutlinedButton.styleFrom(
+                  backgroundColor: isDark
+                      ? const Color(0xFF1E293B).withOpacity(0.82)
+                      : Colors.white.withOpacity(0.55),
                   foregroundColor: AppColors.slate700,
-                  side: const BorderSide(color: AppColors.slate200),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  side: BorderSide(color: AppColors.slate200),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
               ),
             ),
@@ -204,30 +334,57 @@ class QuizModuleCard extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: onStart,
-                icon: const Icon(Icons.replay, size: 17),
-                label: const Text('Ulangi Kuis'),
+                icon: const Icon(Icons.replay_rounded, size: 17),
+                label: const Text(
+                  'Ulangi Kuis',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                ),
                 style: OutlinedButton.styleFrom(
+                  backgroundColor: AppColors.sky50.withOpacity(0.85),
                   foregroundColor: AppColors.sky700,
-                  side: const BorderSide(color: AppColors.slate200),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  side: BorderSide(color: AppColors.sky200),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
               ),
             ),
           ],
         );
       case QuizStatus.newChallenge:
-        return SizedBox(
+        return Container(
           width: double.infinity,
+          height: 44,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.sky600, const Color(0xFF6366F1)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.sky600.withOpacity(0.28),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: ElevatedButton.icon(
             onPressed: onStart,
-            icon: const Text('Mulai Kuis', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-            label: const Icon(Icons.arrow_forward, size: 17),
+            icon: const Text(
+              'Mulai Kuis',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            label: const Icon(Icons.arrow_forward_rounded, size: 18),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.sky600,
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
             ),
           ),
         );
@@ -236,13 +393,21 @@ class QuizModuleCard extends StatelessWidget {
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: onStart,
-            icon: const Icon(Icons.upgrade, size: 17),
-            label: const Text('Perbaiki Nilai'),
+            icon: const Icon(Icons.upgrade_rounded, size: 18),
+            label: const Text(
+              'Perbaiki Nilai',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
             style: OutlinedButton.styleFrom(
+              backgroundColor: isDark
+                  ? const Color(0xFF1E293B).withOpacity(0.85)
+                  : Colors.white.withOpacity(0.65),
               foregroundColor: AppColors.sky700,
-              side: const BorderSide(color: AppColors.slate200),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              side: BorderSide(color: AppColors.sky200, width: 1.3),
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
             ),
           ),
         );

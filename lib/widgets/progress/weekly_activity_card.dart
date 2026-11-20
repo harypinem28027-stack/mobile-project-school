@@ -20,7 +20,15 @@ class WeeklyActivityCard extends StatelessWidget {
     this.topPercentLabel = 'Top 5% Kelas',
   });
 
-  static const _dayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+  static const List<String> _dayLabels = [
+    'Sen',
+    'Sel',
+    'Rab',
+    'Kam',
+    'Jum',
+    'Sab',
+    'Min',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -28,10 +36,12 @@ class WeeklyActivityCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.glassFill,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.slate200),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,18 +50,35 @@ class WeeklyActivityCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                children: const [
+                children: [
                   Icon(Icons.calendar_today, size: 18, color: AppColors.sky600),
-                  SizedBox(width: 8),
-                  Text('Aktivitas Mingguan', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.slate900)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Aktivitas Mingguan',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.slate900,
+                    ),
+                  ),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                    color: AppColors.emerald50, borderRadius: BorderRadius.circular(999), border: Border.all(color: AppColors.emerald200)),
-                child: Text('$activeCount/$totalTarget Hari Target',
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: AppColors.emerald700, fontWeight: FontWeight.w600)),
+                  color: AppColors.emerald50,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: AppColors.emerald200),
+                ),
+                child: Text(
+                  '$activeCount/$totalTarget Hari Target',
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 11,
+                    color: AppColors.emerald700,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -64,19 +91,40 @@ class WeeklyActivityCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 3),
                   child: Column(
                     children: [
-                      Text(_dayLabels[i], style: TextStyle(fontSize: 11, color: active ? AppColors.slate500 : AppColors.slate400)),
+                      Text(
+                        _dayLabels[i],
+                        style: TextStyle(
+                          fontSize: 11,
+                          color:
+                              active ? AppColors.slate500 : AppColors.slate400,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       Container(
                         height: 32,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: active ? AppColors.emerald500 : AppColors.slate100,
+                          color:
+                              active ? AppColors.emerald500 : AppColors.slate100,
                           borderRadius: BorderRadius.circular(8),
-                          border: active ? null : Border.all(color: AppColors.slate200),
+                          border: active
+                              ? null
+                              : Border.all(color: AppColors.slate200),
                         ),
                         child: active
-                            ? const Icon(Icons.check, color: Colors.white, size: 15)
-                            : Container(width: 6, height: 6, decoration: BoxDecoration(color: AppColors.slate300, shape: BoxShape.circle)),
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 15,
+                              )
+                            : Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: AppColors.slate300,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
                       ),
                     ],
                   ),
@@ -87,7 +135,9 @@ class WeeklyActivityCard extends StatelessWidget {
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.only(top: 10),
-            decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.slate100))),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: AppColors.slate100)),
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -95,10 +145,21 @@ class WeeklyActivityCard extends StatelessWidget {
                   children: [
                     const Icon(Icons.bolt, size: 15, color: Color(0xFFF59E0B)),
                     const SizedBox(width: 4),
-                    Text('Streak $streakDays hari berturut-turut', style: const TextStyle(fontSize: 12, color: AppColors.slate600)),
+                    Text(
+                      'Streak $streakDays hari berturut-turut',
+                      style: TextStyle(fontSize: 12, color: AppColors.slate600),
+                    ),
                   ],
                 ),
-                Text(topPercentLabel, style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: AppColors.sky600, fontWeight: FontWeight.w600)),
+                Text(
+                  topPercentLabel,
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 11,
+                    color: AppColors.sky600,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),

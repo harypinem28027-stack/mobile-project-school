@@ -11,7 +11,7 @@ class BugNote {
   final String correctCode;
   final String solutionText;
 
-  const BugNote({
+  BugNote({
     required this.category,
     required this.categoryLabel,
     required this.materialId,

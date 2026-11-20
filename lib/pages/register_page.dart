@@ -1,64 +1,69 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../theme/app_colors.dart';
+import '../theme/theme_controller.dart';
+import '../widgets/eclipse_theme_toggle.dart';
+import '../widgets/glass_morphism_box.dart';
 import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+  RegisterPage({super.key});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-  // ============================================================
-  // COLOR
-  // ============================================================
-
-  static const Color surface = Color(0xFFF8F9FF);
-  static const Color onSurface = Color(0xFF0B1C30);
-  static const Color onSurfaceVariant = Color(0xFF3F4850);
-
-  static const Color primary = Color(0xFF006194);
-  static const Color primaryContainer = Color(0xFF007BB9);
-
-  static const Color tertiary = Color(0xFF006947);
-  static const Color tertiaryFixed = Color(0xFF6FFBBE);
-
-  static const Color error = Color(0xFFBA1A1A);
-
-  static const Color surfaceContainerLow = Color(0xFFEFF4FF);
-  static const Color surfaceContainer = Color(0xFFE5EEFF);
-  static const Color surfaceContainerHigh = Color(0xFFDCE9FF);
-  static const Color outline = Color(0xFF707881);
-
-  // ============================================================
-  // CONTROLLER
-  // ============================================================
-
+class _RegisterPageState extends State<RegisterPage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController idController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmController = TextEditingController();
 
-  // ============================================================
-  // STATE
-  // ============================================================
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _idFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+  final FocusNode _confirmFocus = FocusNode();
+
+  late final AnimationController _dropController;
 
   bool obscurePassword = true;
   bool obscureConfirm = true;
-
   bool agreeTerms = false;
-
   bool isSubmitting = false;
   bool isRegistered = false;
 
-  // ============================================================
-  // DISPOSE
-  // ============================================================
+  @override
+  void initState() {
+    super.initState();
+    _dropController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 850),
+    )..forward();
+
+    _nameFocus.addListener(_onFocusChanged);
+    _emailFocus.addListener(_onFocusChanged);
+    _idFocus.addListener(_onFocusChanged);
+    _passwordFocus.addListener(_onFocusChanged);
+    _confirmFocus.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
+    _dropController.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
+    _idFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmFocus.dispose();
     nameController.dispose();
     emailController.dispose();
     idController.dispose();
@@ -67,35 +72,39 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  // ============================================================
-  // PASSWORD STRENGTH
-  // ============================================================
+  Widget _dropItem({
+    required double start,
+    required double end,
+    required Widget child,
+    double dropDistance = 34.0,
+  }) {
+    final curve = CurvedAnimation(
+      parent: _dropController,
+      curve: Interval(start, end, curve: Curves.easeOutBack),
+    );
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: curve,
+        child: child,
+        builder: (context, cachedChild) {
+          return Transform.translate(
+            offset: Offset(0, -(1.0 - curve.value) * dropDistance),
+            child: cachedChild,
+          );
+        },
+      ),
+    );
+  }
 
   int get passwordStrength {
     final password = passwordController.text;
-
-    if (password.isEmpty) {
-      return 0;
-    }
+    if (password.isEmpty) return 0;
 
     int strength = 0;
-
-    if (password.length >= 8) {
-      strength++;
-    }
-
-    if (RegExp(r'[A-Z]').hasMatch(password)) {
-      strength++;
-    }
-
-    if (RegExp(r'[0-9]').hasMatch(password)) {
-      strength++;
-    }
-
-    if (RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
-      strength++;
-    }
-
+    if (password.length >= 8) strength++;
+    if (RegExp(r'[A-Z]').hasMatch(password)) strength++;
+    if (RegExp(r'[0-9]').hasMatch(password)) strength++;
+    if (RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) strength++;
     return strength;
   }
 
@@ -116,20 +125,14 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  // ============================================================
-  // PASSWORD MATCH
-  // ============================================================
-
   bool get passwordsMatch {
     return confirmController.text.isNotEmpty &&
         passwordController.text == confirmController.text;
   }
 
-  // ============================================================
-  // SUBMIT
-  // ============================================================
-
   Future<void> _submitRegistration() async {
+    FocusScope.of(context).unfocus();
+
     final name = nameController.text.trim();
     final email = emailController.text.trim();
     final studentId = idController.text.trim();
@@ -141,32 +144,30 @@ class _RegisterPageState extends State<RegisterPage> {
         studentId.isEmpty ||
         password.isEmpty ||
         confirmPassword.isEmpty) {
-      _showMessage('Semua data wajib diisi.');
+      _showMessage('Semua data wajib diisi.', isError: true);
       return;
     }
 
-    final emailRegex = RegExp(
-      r'^[\w\.-]+@[\w\.-]+\.\w+$',
-    );
-
+    final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
     if (!emailRegex.hasMatch(email)) {
-      _showMessage('Format email belum sesuai.');
+      _showMessage('Format email belum sesuai.', isError: true);
       return;
     }
 
     if (password.length < 8) {
-      _showMessage('Kata sandi minimal 8 karakter.');
+      _showMessage('Kata sandi minimal 8 karakter.', isError: true);
       return;
     }
 
     if (password != confirmPassword) {
-      _showMessage('Konfirmasi kata sandi tidak sesuai.');
+      _showMessage('Konfirmasi kata sandi tidak sesuai.', isError: true);
       return;
     }
 
     if (!agreeTerms) {
       _showMessage(
         'Silakan setujui Syarat & Ketentuan serta Kebijakan Privasi.',
+        isError: true,
       );
       return;
     }
@@ -176,9 +177,10 @@ class _RegisterPageState extends State<RegisterPage> {
       isRegistered = false;
     });
 
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(Duration(milliseconds: 900));
 
     if (!mounted) return;
+    HapticFeedback.mediumImpact();
 
     setState(() {
       isSubmitting = false;
@@ -186,205 +188,145 @@ class _RegisterPageState extends State<RegisterPage> {
     });
   }
 
-  // ============================================================
-  // MESSAGE
-  // ============================================================
-
-  void _showMessage(String message) {
+  void _showMessage(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 12.5,
+            color: Colors.white,
+          ),
+        ),
         behavior: SnackBarBehavior.floating,
+        backgroundColor: isError
+            ? const Color(0xFFBE123C)
+            : const Color(0xFF0F172A).withOpacity(0.92),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        margin: EdgeInsets.only(bottom: 24, left: 20, right: 20),
       ),
     );
   }
 
-  // ============================================================
-  // BADGE
-  // ============================================================
-
-  Widget _buildBadge(String text) {
+  Widget _buildGlassBadge(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 7,
-        vertical: 3,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: surfaceContainer,
-        borderRadius: BorderRadius.circular(5),
+        color: AppColors.sky50.withOpacity(0.88),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.glassBorder),
       ),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: primary,
-          letterSpacing: 0.3,
+          color: AppColors.sky700,
+          letterSpacing: 0.2,
         ),
       ),
     );
   }
 
-  // ============================================================
-  // TOP HEADER
-  // ============================================================
-
   Widget _buildTopHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 10,
-      ),
-      decoration: BoxDecoration(
-        color: surface.withOpacity(0.95),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 10, 16, 4),
       child: Row(
         children: [
-          // BACK BUTTON
-          InkWell(
-            borderRadius: BorderRadius.circular(10),
+          GestureDetector(
             onTap: () {
+              HapticFeedback.selectionClick();
               Navigator.pop(context);
             },
-            child: Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: surfaceContainerLow,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: onSurface,
-                size: 21,
+            child: GlassMorphismBox(
+              borderRadius: 999,
+              opacity: 0.58,
+              padding: EdgeInsets.all(10),
+              child: Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.slate800,
+                size: 19,
               ),
             ),
           ),
-
-          const SizedBox(width: 12),
-
-          // LOGO
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: surfaceContainer,
-              borderRadius: BorderRadius.circular(9),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.network(
-              'https://lh3.googleusercontent.com/aida/AEtjO1VTMYF2xwEWsBbXaxD28g5jaoFyCCtcZHGxILOvlAcyaBbYJ2G3-Tr9_9Izjm0SJiatPowRTpU00JliL0D_CgeXL7GI_PYK2CgnHQXPSvqWQqhmudP90dU_aw-rUJh1ulz3BhRXOhXBTDrH3AvZmdteBg1PeIMfTdt4Z_Fd-Ul7Mc8BQUEGLhvsJaoVcqfrDyDhtLS-3HFQOhtyP8eRJ706IJuJiCIc8IOHY-tCohIBYt5ixy-tf_jLhfo',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.code,
-                  color: primary,
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(width: 9),
-
-          // DEBUGTIK
-          const Text(
-            'DebugTIK',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: onSurface,
-            ),
-          ),
-
-          const SizedBox(width: 6),
-
-          _buildBadge('v2.4'),
-
-          const Spacer(),
-
-          // CREATE ACCOUNT
-          const Text(
-            'Create Account',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: onSurfaceVariant,
+          SizedBox(width: 10),
+          GlassMorphismBox(
+            borderRadius: 999,
+            opacity: 0.55,
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [const Color(0xFF4F46E5), const Color(0xFF6366F1)],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.terminal_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'DebugTIK',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.slate900,
+                  ),
+                ),
+                SizedBox(width: 6),
+                _buildGlassBadge('v2.4'),
+              ],
             ),
           ),
-
-          const SizedBox(width: 9),
-
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              color: primary,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 19,
-            ),
+          Spacer(),
+          EclipseThemeToggle(
+            isDark: ThemeController.instance.isDark,
+            onToggle: ThemeController.instance.toggleTheme,
           ),
         ],
       ),
     );
   }
-
-  // ============================================================
-  // PAGE HEADER
-  // ============================================================
 
   Widget _buildPageHeader() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          children: [
-            _buildBadge(
-              'siswa (id_siswa, learning_path, current_level)',
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 15),
-
-        const Text(
+        _buildGlassBadge('siswa • id_siswa • learning_path'),
+        SizedBox(height: 12),
+        Text(
           'Registrasi Akun Siswa TIK',
+          textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 27,
+            fontSize: 25,
             fontWeight: FontWeight.w800,
-            color: onSurface,
-            height: 1.15,
+            color: AppColors.slate900,
+            letterSpacing: -0.4,
+            height: 1.2,
           ),
         ),
-
-        const SizedBox(height: 10),
-
-        const Text(
-          'Daftar untuk memulai praktikum kode interaktif, '
-          'simulasi bug lab, dan pencatatan progres kompetensi TIK.',
+        SizedBox(height: 6),
+        Text(
+          'Daftar untuk memulai praktikum kode interaktif, simulasi bug lab, dan pencatatan progres kompetensi TIK.',
+          textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 14,
-            height: 1.6,
-            color: onSurfaceVariant,
+            fontSize: 12.8,
+            height: 1.45,
+            color: AppColors.slate600,
           ),
         ),
       ],
     );
   }
-
-  // ============================================================
-  // SECTION TITLE
-  // ============================================================
 
   Widget _buildSectionTitle({
     required String title,
@@ -400,31 +342,29 @@ class _RegisterPageState extends State<RegisterPage> {
               Flexible(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: onSurface,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.slate800,
                   ),
                 ),
               ),
-
               if (badge != null) ...[
-                const SizedBox(width: 7),
-                _buildBadge(badge),
+                SizedBox(width: 7),
+                _buildGlassBadge(badge),
               ],
             ],
           ),
         ),
-
         if (meta != null) ...[
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             meta,
-            style: const TextStyle(
-              fontSize: 9,
+            style: TextStyle(
+              fontSize: 9.5,
               fontWeight: FontWeight.w800,
-              color: outline,
-              letterSpacing: 0.5,
+              color: AppColors.slate500,
+              letterSpacing: 0.4,
             ),
           ),
         ],
@@ -432,82 +372,83 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // ============================================================
-  // TEXT FIELD
-  // ============================================================
-
-  Widget _buildTextField({
+  Widget _buildGlassTextField({
     required String label,
     required TextEditingController controller,
+    required FocusNode focusNode,
     required IconData icon,
     required String hint,
     String? badge,
     String? meta,
     String? helper,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
   }) {
+    final isFocused = focusNode.hasFocus;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(
-          title: label,
-          badge: badge,
-          meta: meta,
-        ),
-
-        const SizedBox(height: 9),
-
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          style: const TextStyle(
-            fontSize: 14,
-            color: onSurface,
+        _buildSectionTitle(title: label, badge: badge, meta: meta),
+        SizedBox(height: 8),
+        AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: AppColors.glassFill.withOpacity(isFocused ? 0.88 : 0.64),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isFocused ? AppColors.sky600 : AppColors.glassBorder,
+              width: isFocused ? 1.6 : 1.2,
+            ),
+            boxShadow: isFocused
+                ? [
+                    BoxShadow(
+                      color: AppColors.sky600.withOpacity(0.14),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ]
+                : null,
           ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(
-              color: outline,
-              fontSize: 13,
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            keyboardType: keyboardType,
+            textInputAction: textInputAction,
+            onSubmitted: onSubmitted,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.slate900,
             ),
-            prefixIcon: Icon(
-              icon,
-              size: 20,
-              color: primary,
-            ),
-            filled: true,
-            fillColor: surfaceContainerLow,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 15,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(9),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(9),
-              borderSide: BorderSide(
-                color: outline.withOpacity(0.18),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(
+                color: AppColors.slate500,
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+              ),
+              prefixIcon: Icon(
+                icon,
+                size: 20,
+                color: isFocused ? AppColors.sky600 : AppColors.slate500,
+              ),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(9),
-              borderSide: const BorderSide(
-                color: primary,
-                width: 1.5,
-              ),
-            ),
           ),
         ),
-
         if (helper != null) ...[
-          const SizedBox(height: 7),
+          SizedBox(height: 6),
           Text(
             helper,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: onSurfaceVariant,
+              color: AppColors.slate600,
               height: 1.4,
             ),
           ),
@@ -516,84 +457,91 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // ============================================================
-  // PASSWORD FIELD
-  // ============================================================
-
-  Widget _buildPasswordField({
+  Widget _buildGlassPasswordField({
     required String label,
     required String hint,
     required TextEditingController controller,
+    required FocusNode focusNode,
     required bool obscure,
     required VoidCallback onToggle,
     required IconData prefixIcon,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
   }) {
+    final isFocused = focusNode.hasFocus;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: onSurface,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AppColors.slate800,
           ),
         ),
-
-        const SizedBox(height: 9),
-
-        TextField(
-          controller: controller,
-          obscureText: obscure,
-          onChanged: (_) {
-            setState(() {});
-          },
-          style: const TextStyle(
-            fontSize: 14,
-            color: onSurface,
+        SizedBox(height: 8),
+        AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: AppColors.glassFill.withOpacity(isFocused ? 0.88 : 0.64),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isFocused ? AppColors.sky600 : AppColors.glassBorder,
+              width: isFocused ? 1.6 : 1.2,
+            ),
+            boxShadow: isFocused
+                ? [
+                    BoxShadow(
+                      color: AppColors.sky600.withOpacity(0.14),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ]
+                : null,
           ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(
-              color: outline,
-              fontSize: 13,
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            obscureText: obscure,
+            textInputAction: textInputAction,
+            onSubmitted: onSubmitted,
+            onChanged: (_) => setState(() {}),
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.slate900,
             ),
-            prefixIcon: Icon(
-              prefixIcon,
-              size: 20,
-              color: primary,
-            ),
-            suffixIcon: IconButton(
-              onPressed: onToggle,
-              icon: Icon(
-                obscure
-                    ? Icons.visibility_off
-                    : Icons.visibility,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(
+                color: AppColors.slate500,
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+              ),
+              prefixIcon: Icon(
+                prefixIcon,
                 size: 20,
-                color: outline,
+                color: isFocused ? AppColors.sky600 : AppColors.slate500,
               ),
-            ),
-            filled: true,
-            fillColor: surfaceContainerLow,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 15,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(9),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(9),
-              borderSide: BorderSide(
-                color: outline.withOpacity(0.18),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  onToggle();
+                },
+                icon: Icon(
+                  obscure
+                      ? Icons.visibility_off_rounded
+                      : Icons.visibility_rounded,
+                  size: 20,
+                  color: obscure ? AppColors.slate500 : AppColors.sky600,
+                ),
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(9),
-              borderSide: const BorderSide(
-                color: primary,
-                width: 1.5,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
               ),
             ),
           ),
@@ -602,54 +550,43 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // ============================================================
-  // PASSWORD STRENGTH
-  // ============================================================
-
   Widget _buildPasswordStrength() {
     final strength = passwordStrength;
+    if (passwordController.text.isEmpty) return SizedBox.shrink();
 
-    if (passwordController.text.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    final barColor = strength >= 3
+        ? AppColors.emerald700
+        : (strength == 2 ? AppColors.amber700 : const Color(0xFFE11D48));
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: EdgeInsets.only(top: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: List.generate(
-              4,
-              (index) {
-                return Expanded(
-                  child: Container(
-                    height: 4,
-                    margin: EdgeInsets.only(
-                      right: index == 3 ? 0 : 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: index < strength
-                          ? primary
-                          : surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
+            children: List.generate(4, (index) {
+              return Expanded(
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 220),
+                  height: 5,
+                  margin: EdgeInsets.only(right: index == 3 ? 0 : 5),
+                  decoration: BoxDecoration(
+                    color: index < strength
+                        ? barColor
+                        : AppColors.glassFill.withOpacity(0.75),
+                    borderRadius: BorderRadius.circular(999),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            }),
           ),
-
-          const SizedBox(height: 5),
-
+          SizedBox(height: 5),
           Text(
             passwordStrengthText,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 10.5,
               fontWeight: FontWeight.w800,
-              color: strength >= 3
-                  ? tertiary
-                  : error,
+              color: barColor,
               letterSpacing: 0.4,
             ),
           ),
@@ -658,35 +595,26 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // ============================================================
-  // CONFIRM PASSWORD STATUS
-  // ============================================================
-
   Widget _buildMatchStatus() {
-    if (confirmController.text.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
+    if (confirmController.text.isEmpty) return SizedBox.shrink();
     final match = passwordsMatch;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 7),
+      padding: EdgeInsets.only(top: 7),
       child: Row(
         children: [
           Icon(
-            match ? Icons.check_circle : Icons.error,
-            size: 14,
-            color: match ? tertiary : error,
+            match ? Icons.check_circle_rounded : Icons.error_rounded,
+            size: 15,
+            color: match ? AppColors.emerald700 : const Color(0xFFE11D48),
           ),
-          const SizedBox(width: 5),
+          SizedBox(width: 5),
           Text(
-            match
-                ? 'Kata sandi sesuai'
-                : 'Kata sandi belum sesuai',
+            match ? 'Kata sandi sesuai' : 'Kata sandi belum sesuai',
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: match ? tertiary : error,
+              color: match ? AppColors.emerald700 : const Color(0xFFE11D48),
             ),
           ),
         ],
@@ -694,72 +622,70 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // ============================================================
-  // TERMS
-  // ============================================================
-
   Widget _buildTerms() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
       onTap: () {
-        setState(() {
-          agreeTerms = !agreeTerms;
-        });
+        HapticFeedback.selectionClick();
+        setState(() => agreeTerms = !agreeTerms);
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
+        padding: EdgeInsets.symmetric(vertical: 4),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Checkbox(
-              value: agreeTerms,
-              onChanged: (value) {
-                setState(() {
-                  agreeTerms = value ?? false;
-                });
-              },
-              activeColor: primary,
-              visualDensity: VisualDensity.compact,
+            AnimatedContainer(
+              duration: Duration(milliseconds: 180),
+              width: 20,
+              height: 20,
+              margin: EdgeInsets.only(top: 1),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                gradient: agreeTerms
+                    ? LinearGradient(
+                        colors: [const Color(0xFF4F46E5), const Color(0xFF6366F1)],
+                      )
+                    : null,
+                color: agreeTerms ? null : AppColors.glassFill.withOpacity(0.75),
+                border: Border.all(
+                  color: agreeTerms ? Colors.transparent : AppColors.slate300,
+                ),
+              ),
+              child: agreeTerms
+                  ? Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: Colors.white,
+                    )
+                  : null,
             ),
-
-            const SizedBox(width: 4),
-
-            const Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(top: 7),
-                child: Text.rich(
-                  TextSpan(
-                    style: TextStyle(
-                      fontSize: 11,
-                      height: 1.5,
-                      color: onSurfaceVariant,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: 'Saya menyetujui ',
-                      ),
-                      TextSpan(
-                        text: 'Syarat & Ketentuan',
-                        style: TextStyle(
-                          color: primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      TextSpan(
-                        text: ' serta ',
-                      ),
-                      TextSpan(
-                        text: 'Kebijakan Privasi',
-                        style: TextStyle(
-                          color: primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      TextSpan(
-                        text: '.',
-                      ),
-                    ],
+            SizedBox(width: 10),
+            Expanded(
+              child: Text.rich(
+                TextSpan(
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.45,
+                    color: AppColors.slate600,
                   ),
+                  children: [
+                    TextSpan(text: 'Saya menyetujui '),
+                    TextSpan(
+                      text: 'Syarat & Ketentuan',
+                      style: TextStyle(
+                        color: AppColors.sky600,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    TextSpan(text: ' serta '),
+                    TextSpan(
+                      text: 'Kebijakan Privasi',
+                      style: TextStyle(
+                        color: AppColors.sky600,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    TextSpan(text: '.'),
+                  ],
                 ),
               ),
             ),
@@ -769,27 +695,28 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // ============================================================
-  // SUBMIT BUTTON
-  // ============================================================
-
   Widget _buildSubmitButton() {
     if (isRegistered) {
       return Container(
         width: double.infinity,
-        height: 50,
+        height: 48,
         decoration: BoxDecoration(
-          color: tertiary,
-          borderRadius: BorderRadius.circular(9),
+          gradient: LinearGradient(
+            colors: [const Color(0xFF047857), const Color(0xFF10B981)],
+          ),
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF10B981).withOpacity(0.28),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.check_circle,
-              color: Colors.white,
-              size: 20,
-            ),
+            Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
             SizedBox(width: 8),
             Text(
               'Terdaftar',
@@ -804,51 +731,54 @@ class _RegisterPageState extends State<RegisterPage> {
       );
     }
 
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 50,
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [const Color(0xFF4F46E5), const Color(0xFF6366F1)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F46E5).withOpacity(0.32),
+            blurRadius: 14,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
       child: ElevatedButton(
-        onPressed: isSubmitting
-            ? null
-            : _submitRegistration,
+        onPressed: isSubmitting ? null : _submitRegistration,
         style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
-          disabledBackgroundColor: primaryContainer,
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           foregroundColor: Colors.white,
-          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(999),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (isSubmitting)
-              const SizedBox(
-                width: 19,
-                height: 19,
+              SizedBox(
+                width: 18,
+                height: 18,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Colors.white,
-                  ),
+                  strokeWidth: 2.2,
+                  color: Colors.white,
                 ),
               )
             else
-              const Icon(
-                Icons.person_add,
-                size: 19,
-              ),
-
-            const SizedBox(width: 8),
-
+              Icon(Icons.person_add_rounded, size: 19),
+            SizedBox(width: 8),
             Text(
-              isSubmitting
-                  ? 'Memproses Data Lab...'
-                  : 'Daftar Akun Siswa',
-              style: const TextStyle(
+              isSubmitting ? 'Memproses Data Lab...' : 'Daftar Akun Siswa',
+              style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -857,43 +787,34 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // ============================================================
-  // SUCCESS FEEDBACK
-  // ============================================================
-
   Widget _buildFeedback() {
-    if (!isRegistered) {
-      return const SizedBox.shrink();
-    }
+    if (!isRegistered) return SizedBox.shrink();
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.only(top: 12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: tertiaryFixed.withOpacity(0.35),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: tertiary.withOpacity(0.25),
-        ),
+        color: AppColors.emerald50.withOpacity(0.88),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.glassBorder),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.check_circle,
-            color: tertiary,
+            Icons.check_circle_rounded,
+            color: AppColors.emerald700,
             size: 18,
           ),
           SizedBox(width: 9),
           Expanded(
             child: Text(
-              'Pendaftaran Siswa berhasil! '
-              'Mengalihkan ke lab praktikum...',
+              'Pendaftaran Siswa berhasil! Silakan masuk menggunakan akun yang telah didaftarkan.',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w700,
-                color: tertiary,
+                color: AppColors.emerald700,
                 height: 1.4,
               ),
             ),
@@ -903,223 +824,259 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // ============================================================
-  // LOGIN FOOTER
-  // ============================================================
-
   Widget _buildLoginFooter() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text(
-          'Sudah memiliki akun?',
-          style: TextStyle(
-            fontSize: 12,
-            color: onSurfaceVariant,
-          ),
-        ),
+    final isDark = ThemeController.instance.isDark;
 
-        const SizedBox(width: 5),
-
-        TextButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    const LoginPage(),
-              ),
-            );
-          },
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: const Row(
-            children: [
-              Text(
-                'Masuk Akun Siswa',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: primary,
-                ),
-              ),
-              SizedBox(width: 3),
-              Icon(
-                Icons.arrow_forward,
-                size: 15,
-                color: primary,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ============================================================
-  // BUILD
-  // ============================================================
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: surface,
-
-      body: SafeArea(
-        child: Column(
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => LoginPage()),
+        );
+      },
+      child: GlassMorphismBox(
+        borderRadius: 999,
+        opacity: isDark ? 0.65 : 0.56,
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            _buildTopHeader(),
-
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 24,
+            Text(
+              'Sudah memiliki akun?',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+                color: AppColors.slate600,
+              ),
+            ),
+            SizedBox(width: 8),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                gradient: LinearGradient(
+                  colors: [const Color(0xFF4F46E5), const Color(0xFF6366F1)],
                 ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 650,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ========================================
-                        // HEADER
-                        // ========================================
-
-                        _buildPageHeader(),
-
-                        const SizedBox(height: 28),
-
-                        // ========================================
-                        // NAMA LENGKAP
-                        // ========================================
-
-                        _buildTextField(
-                          label: 'Nama Lengkap',
-                          controller: nameController,
-                          icon: Icons.person_outline,
-                          hint: 'Nama lengkap Anda',
-                        ),
-
-                        const SizedBox(height: 22),
-
-                        // ========================================
-                        // EMAIL
-                        // ========================================
-
-                        _buildTextField(
-                          label: 'Email Siswa',
-                          badge: 'email',
-                          meta: 'DOMAIN AKADEMIK',
-                          controller: emailController,
-                          icon: Icons.mail_outline,
-                          hint: 'siswa@sekolah.sch.id',
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-
-                        const SizedBox(height: 22),
-
-                        // ========================================
-                        // NISN / ID SISWA
-                        // ========================================
-
-                        _buildTextField(
-                          label: 'NISN / ID Siswa',
-                          badge: 'id_siswa',
-                          meta: 'FORMAT TIK',
-                          controller: idController,
-                          icon: Icons.badge_outlined,
-                          hint: 'Contoh: SIS-2026-0892',
-                          helper:
-                              'Masukkan NISN resmi atau Nomor Induk Lab '
-                              'yang diterbitkan pengajar TIK.',
-                        ),
-
-                        const SizedBox(height: 22),
-
-
-                        // ========================================
-                        // PASSWORD
-                        // ========================================
-
-                        _buildPasswordField(
-                          label: 'Kata Sandi',
-                          hint: 'Minimal 8 karakter',
-                          controller: passwordController,
-                          obscure: obscurePassword,
-                          prefixIcon: Icons.lock_outline,
-                          onToggle: () {
-                            setState(() {
-                              obscurePassword =
-                                  !obscurePassword;
-                            });
-                          },
-                        ),
-
-                        _buildPasswordStrength(),
-
-                        const SizedBox(height: 22),
-
-                        // ========================================
-                        // CONFIRM PASSWORD
-                        // ========================================
-
-                        _buildPasswordField(
-                          label: 'Konfirmasi Kata Sandi',
-                          hint: 'Ulangi kata sandi Anda',
-                          controller: confirmController,
-                          obscure: obscureConfirm,
-                          prefixIcon: Icons.lock_reset_outlined,
-                          onToggle: () {
-                            setState(() {
-                              obscureConfirm =
-                                  !obscureConfirm;
-                            });
-                          },
-                        ),
-
-                        _buildMatchStatus(),
-
-                        const SizedBox(height: 16),
-
-                        // ========================================
-                        // TERMS
-                        // ========================================
-
-                        _buildTerms(),
-
-                        const SizedBox(height: 17),
-
-                        // ========================================
-                        // SUBMIT
-                        // ========================================
-
-                        _buildSubmitButton(),
-
-                        _buildFeedback(),
-
-                        const SizedBox(height: 18),
-
-                        // ========================================
-                        // LOGIN
-                        // ========================================
-
-                        _buildLoginFooter(),
-
-                        const SizedBox(height: 30),
-                      ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Masuk Akun Siswa',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
                     ),
                   ),
-                ),
+                  SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 13,
+                    color: Colors.white,
+                  ),
+                ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = ThemeController.instance.isDark;
+
+    return Scaffold(
+      backgroundColor: AppColors.slate50,
+      body: Stack(
+        children: [
+          Positioned(
+            top: -70,
+            left: -50,
+            child: _AmbientBlob(
+              size: 260,
+              color: AppColors.sky600.withOpacity(isDark ? 0.22 : 0.16),
+            ),
+          ),
+          Positioned(
+            top: 240,
+            right: -70,
+            child: _AmbientBlob(
+              size: 250,
+              color: const Color(0xFF6366F1).withOpacity(isDark ? 0.20 : 0.14),
+            ),
+          ),
+          Positioned(
+            bottom: -60,
+            left: 20,
+            child: _AmbientBlob(
+              size: 240,
+              color: const Color(0xFF38BDF8).withOpacity(isDark ? 0.18 : 0.14),
+            ),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                _dropItem(
+                  start: 0.0,
+                  end: 0.42,
+                  dropDistance: 26,
+                  child: _buildTopHeader(),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(18, 10, 18, 28),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: 460),
+                        child: Column(
+                          children: [
+                            SizedBox(height: 6),
+                            _dropItem(
+                              start: 0.10,
+                              end: 0.55,
+                              dropDistance: 32,
+                              child: _buildPageHeader(),
+                            ),
+                            SizedBox(height: 18),
+                            _dropItem(
+                              start: 0.22,
+                              end: 0.80,
+                              dropDistance: 40,
+                              child: GlassMorphismBox(
+                                borderRadius: 32,
+                                opacity: isDark ? 0.65 : 0.56,
+                                padding:
+                                    EdgeInsets.fromLTRB(22, 24, 22, 24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildGlassTextField(
+                                      label: 'Nama Lengkap',
+                                      controller: nameController,
+                                      focusNode: _nameFocus,
+                                      icon: Icons.person_outline_rounded,
+                                      hint: 'Nama lengkap Anda',
+                                      textInputAction: TextInputAction.next,
+                                      onSubmitted: (_) =>
+                                          _emailFocus.requestFocus(),
+                                    ),
+                                    SizedBox(height: 18),
+                                    _buildGlassTextField(
+                                      label: 'Email Siswa',
+                                      badge: 'email',
+                                      meta: 'DOMAIN AKADEMIK',
+                                      controller: emailController,
+                                      focusNode: _emailFocus,
+                                      icon: Icons.mail_outline_rounded,
+                                      hint: 'siswa@sekolah.sch.id',
+                                      keyboardType: TextInputType.emailAddress,
+                                      textInputAction: TextInputAction.next,
+                                      onSubmitted: (_) =>
+                                          _idFocus.requestFocus(),
+                                    ),
+                                    SizedBox(height: 18),
+                                    _buildGlassTextField(
+                                      label: 'NISN / ID Siswa',
+                                      badge: 'id_siswa',
+                                      meta: 'FORMAT TIK',
+                                      controller: idController,
+                                      focusNode: _idFocus,
+                                      icon: Icons.badge_outlined,
+                                      hint: 'Contoh: SIS-2026-0892',
+                                      helper:
+                                          'Masukkan NISN resmi atau Nomor Induk Lab yang diterbitkan pengajar TIK.',
+                                      textInputAction: TextInputAction.next,
+                                      onSubmitted: (_) =>
+                                          _passwordFocus.requestFocus(),
+                                    ),
+                                    SizedBox(height: 18),
+                                    _buildGlassPasswordField(
+                                      label: 'Kata Sandi',
+                                      hint: 'Minimal 8 karakter',
+                                      controller: passwordController,
+                                      focusNode: _passwordFocus,
+                                      obscure: obscurePassword,
+                                      prefixIcon: Icons.lock_outline_rounded,
+                                      textInputAction: TextInputAction.next,
+                                      onSubmitted: (_) =>
+                                          _confirmFocus.requestFocus(),
+                                      onToggle: () {
+                                        setState(() {
+                                          obscurePassword = !obscurePassword;
+                                        });
+                                      },
+                                    ),
+                                    _buildPasswordStrength(),
+                                    SizedBox(height: 18),
+                                    _buildGlassPasswordField(
+                                      label: 'Konfirmasi Kata Sandi',
+                                      hint: 'Ulangi kata sandi Anda',
+                                      controller: confirmController,
+                                      focusNode: _confirmFocus,
+                                      obscure: obscureConfirm,
+                                      prefixIcon: Icons.lock_reset_rounded,
+                                      textInputAction: TextInputAction.done,
+                                      onSubmitted: (_) => _submitRegistration(),
+                                      onToggle: () {
+                                        setState(() {
+                                          obscureConfirm = !obscureConfirm;
+                                        });
+                                      },
+                                    ),
+                                    _buildMatchStatus(),
+                                    SizedBox(height: 14),
+                                    _buildTerms(),
+                                    SizedBox(height: 18),
+                                    _buildSubmitButton(),
+                                    _buildFeedback(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            _dropItem(
+                              start: 0.42,
+                              end: 1.0,
+                              dropDistance: 24,
+                              child: _buildLoginFooter(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AmbientBlob extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  _AmbientBlob({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [color, color.withOpacity(0.0)],
+          ),
         ),
       ),
     );

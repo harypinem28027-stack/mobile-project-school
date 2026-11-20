@@ -8,24 +8,26 @@ import '../theme/app_colors.dart';
 class CategoryPills extends StatelessWidget {
   final String selectedValue;
   final ValueChanged<String> onSelected;
-  final List<CategoryPill> pills;
+  final List<CategoryPill>? pills;
 
   const CategoryPills({
     super.key,
     required this.selectedValue,
     required this.onSelected,
-    this.pills = kCategoryPills,
+    this.pills,
   });
 
   @override
   Widget build(BuildContext context) {
+    final items = pills ?? kCategoryPills;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'KATEGORI MATERI',
               style: TextStyle(
                 fontFamily: 'monospace',
@@ -36,12 +38,13 @@ class CategoryPills extends StatelessWidget {
               ),
             ),
             Text(
-              '${pills.length} Kategori',
-              style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 12,
-                  color: AppColors.sky700,
-                  fontWeight: FontWeight.w500),
+              '${items.length} Kategori',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: AppColors.sky700,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -50,10 +53,10 @@ class CategoryPills extends StatelessWidget {
           height: 32,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: pills.length,
+            itemCount: items.length,
             separatorBuilder: (_, __) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
-              final pill = pills[index];
+              final pill = items[index];
               final isActive = selectedValue == pill.value;
               return GestureDetector(
                 onTap: () => onSelected(pill.value),
@@ -61,10 +64,16 @@ class CategoryPills extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isActive ? AppColors.sky600 : Colors.white,
+                    color: isActive ? AppColors.sky600 : AppColors.glassFill,
                     borderRadius: BorderRadius.circular(999),
-                    border: isActive ? null : Border.all(color: AppColors.slate200),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 3)],
+                    border:
+                        isActive ? null : Border.all(color: AppColors.slate200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 3,
+                      ),
+                    ],
                   ),
                   child: Text(
                     pill.label,

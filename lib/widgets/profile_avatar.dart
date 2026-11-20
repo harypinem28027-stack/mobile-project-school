@@ -4,7 +4,7 @@ import 'package:mobile_project/data/user_profile.dart';
 /// Avatar profil yang otomatis update saat UserProfile berubah.
 class ProfileAvatar extends StatelessWidget {
   final double radius;
-  const ProfileAvatar({super.key, this.radius = 20});
+  ProfileAvatar({super.key, this.radius = 20});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,7 @@ class ProfileAvatar extends StatelessWidget {
 class ProfileName extends StatelessWidget {
   final TextStyle? style;
   final TextOverflow? overflow;
-  const ProfileName({super.key, this.style, this.overflow});
+  ProfileName({super.key, this.style, this.overflow});
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +50,7 @@ class ProfileName extends StatelessWidget {
 class ProfileEmail extends StatelessWidget {
   final TextStyle? style;
   final TextOverflow? overflow;
-  const ProfileEmail({super.key, this.style, this.overflow});
+  ProfileEmail({super.key, this.style, this.overflow});
 
   @override
   Widget build(BuildContext context) {

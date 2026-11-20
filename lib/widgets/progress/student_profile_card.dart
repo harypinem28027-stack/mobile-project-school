@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:mobile_project/data/user_profile.dart';
 
 import '../../theme/app_colors.dart';
+import '../glass_morphism_box.dart';
 
-/// Kartu profil siswa + level & XP bar di bagian atas halaman Progres.
-/// Nama, email, dan avatar dibaca dari profil saat halaman diperbarui.
+/// Kartu profil siswa bergaya Liquid Glass di bagian atas halaman Progres.
 class StudentProfileCard extends StatelessWidget {
   final String studentName;
   final String studentEmail;
@@ -21,7 +21,7 @@ class StudentProfileCard extends StatelessWidget {
     required this.studentEmail,
     required this.avatar,
     this.studentId = 'SIS-2026-0891',
-    this.tagLabel = 'Dasar Web Pemula (HTML, CSS, JS)',
+    this.tagLabel = 'Dasar Web (HTML, CSS, JS)',
     this.levelTitle = 'Junior Code Medic',
     this.levelCode = 'Lv. 4',
     this.xpProgress = 0.78,
@@ -29,122 +29,85 @@ class StudentProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.slate200),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6),
-        ],
-      ),
+    final isDark = AppColors.isDark;
+
+    return GlassMorphismBox(
+      borderRadius: 28,
+      opacity: 0.50,
+      padding: const EdgeInsets.all(18),
       child: Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: avatar.gradient,
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Icon(avatar.icon, color: Colors.white, size: 32),
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: avatar.gradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  Positioned(
-                    right: -2,
-                    bottom: -2,
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF59E0B),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.military_tech,
-                        color: Colors.white,
-                        size: 12,
-                      ),
-                    ),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.45)
+                        : Colors.white.withOpacity(0.9),
+                    width: 2,
                   ),
-                ],
+                  boxShadow: [
+                    BoxShadow(
+                      color: avatar.gradient.first.withOpacity(0.28),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(avatar.icon, color: Colors.white, size: 28),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            studentName,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.slate900,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.slate100,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: AppColors.slate200),
-                          ),
-                          child: Text(
-                            studentId,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 10,
-                              color: AppColors.slate600,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      studentName,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.slate900,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       studentEmail,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.slate500,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.slate600,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 7),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
+                        horizontal: 10,
+                        vertical: 3.5,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.sky50,
+                        color: AppColors.sky50.withOpacity(isDark ? 0.75 : 0.85),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: AppColors.sky100),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.sky600.withOpacity(0.35)
+                              : Colors.white.withOpacity(0.9),
+                        ),
                       ),
                       child: Text(
                         tagLabel,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.sky700,
                         ),
                       ),
@@ -154,11 +117,20 @@ class StudentProfileCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Container(
-            padding: const EdgeInsets.only(top: 10),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.slate100)),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF090D16).withOpacity(0.38)
+                  : Colors.white.withOpacity(0.55),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.16)
+                    : Colors.white.withOpacity(0.85),
+                width: 1.1,
+              ),
             ),
             child: Column(
               children: [
@@ -167,60 +139,53 @@ class StudentProfileCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(
-                          Icons.star,
-                          size: 15,
-                          color: Color(0xFFD97706),
+                        Icon(
+                          Icons.workspace_premium_rounded,
+                          size: 17,
+                          color: AppColors.sky600,
                         ),
-                        const SizedBox(width: 5),
+                        const SizedBox(width: 6),
                         Text(
-                          levelTitle,
-                          style: const TextStyle(
+                          '$levelTitle ($levelCode)',
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             color: AppColors.slate800,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.amber50,
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: AppColors.amber200),
-                          ),
-                          child: Text(
-                            levelCode,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 10,
-                              color: AppColors.amber700,
-                            ),
                           ),
                         ),
                       ],
                     ),
                     Text(
                       '${(xpProgress * 100).round()}% XP',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                        color: AppColors.slate500,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.sky600,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: xpProgress,
-                    minHeight: 8,
-                    backgroundColor: AppColors.slate100,
-                    valueColor: const AlwaysStoppedAnimation(AppColors.sky600),
+                Container(
+                  height: 8,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.12)
+                        : AppColors.slate200.withOpacity(0.75),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: xpProgress.clamp(0.0, 1.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        gradient: LinearGradient(
+                          colors: [AppColors.sky600, const Color(0xFF6366F1)],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],

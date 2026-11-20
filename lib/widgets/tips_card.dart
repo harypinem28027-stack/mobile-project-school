@@ -4,12 +4,12 @@ import '../theme/app_colors.dart';
 
 /// Kartu tips coding untuk pemula di bagian bawah HomePage.
 class TipsCard extends StatelessWidget {
-  const TipsCard({super.key});
+  TipsCard({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.amber50,
         borderRadius: BorderRadius.circular(16),
@@ -22,19 +22,19 @@ class TipsCard extends StatelessWidget {
           Container(
             width: 32,
             height: 32,
-            margin: const EdgeInsets.only(top: 2),
+            margin: EdgeInsets.only(top: 2),
             decoration:
                 BoxDecoration(color: AppColors.amber200.withOpacity(0.7), shape: BoxShape.circle),
-            child: const Icon(Icons.lightbulb_outline, color: AppColors.amber800, size: 20),
+            child: Icon(Icons.lightbulb_outline, color: AppColors.amber800, size: 20),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Text(
                       'TIPS CODING PEMULA',
                       style: TextStyle(
@@ -51,9 +51,9 @@ class TipsCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 RichText(
-                  text: const TextSpan(
+                  text: TextSpan(
                     style: TextStyle(fontSize: 12, color: AppColors.amber900, height: 1.5),
                     children: [
                       TextSpan(text: 'Selalu periksa sepasang tag buka dan tutup seperti '),

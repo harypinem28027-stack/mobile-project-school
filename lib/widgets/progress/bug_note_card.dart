@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../models/bug_note.dart';
 import '../../theme/app_colors.dart';
+import '../glass_morphism_box.dart';
 
-/// Kartu satu catatan bug: kode salah vs benar (gaya terminal gelap) +
-/// solusi singkat dari guru.
+/// Kartu catatan bug bergaya Liquid Glass dengan kontras kode yang nyaman.
 class BugNoteCard extends StatelessWidget {
   final BugNote note;
   const BugNoteCard({super.key, required this.note});
@@ -17,7 +17,9 @@ class BugNoteCard extends StatelessWidget {
         return AppColors.sky700;
       case 'js':
       default:
-        return const Color(0xFFBE123C);
+        return AppColors.isDark
+            ? const Color(0xFFFDA4AF)
+            : const Color(0xFFBE123C);
     }
   }
 
@@ -29,107 +31,149 @@ class BugNoteCard extends StatelessWidget {
         return AppColors.sky50;
       case 'js':
       default:
-        return const Color(0xFFFFF1F2);
+        return AppColors.isDark
+            ? const Color(0xFF4C0519)
+            : const Color(0xFFFFF1F2);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    final isDark = AppColors.isDark;
+
+    return GlassMorphismBox(
+      borderRadius: 26,
+      opacity: 0.48,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.slate200),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6)],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                          color: _categoryBg, borderRadius: BorderRadius.circular(6), border: Border.all(color: _categoryColor.withOpacity(0.3))),
-                      child: Text(note.categoryLabel,
-                          style: TextStyle(fontFamily: 'monospace', fontSize: 10, fontWeight: FontWeight.w800, color: _categoryColor)),
-                    ),
-                    _tinyBadge(note.materialId),
-                    _tinyBadge(note.quizId),
-                  ],
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: _categoryBg.withOpacity(0.92),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: isDark
+                        ? _categoryColor.withOpacity(0.35)
+                        : Colors.white.withOpacity(0.9),
+                  ),
+                ),
+                child: Text(
+                  note.categoryLabel,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: _categoryColor,
+                  ),
                 ),
               ),
-              Text(note.date, style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: AppColors.slate400)),
+              Text(
+                note.date,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.slate500,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(note.title, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.slate900)),
+          const SizedBox(height: 9),
+          Text(
+            note.title,
+            style: TextStyle(
+              fontSize: 14.5,
+              fontWeight: FontWeight.w800,
+              color: AppColors.slate900,
+            ),
+          ),
           const SizedBox(height: 10),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: AppColors.slate900, borderRadius: BorderRadius.circular(10)),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF0B1120)
+                  : const Color(0xFF0F172A).withOpacity(0.94),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.14),
+              ),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    _dot(const Color(0xFFF43F5E)),
-                    const SizedBox(width: 4),
-                    _dot(const Color(0xFFF59E0B)),
-                    const SizedBox(width: 4),
-                    _dot(const Color(0xFF10B981)),
-                    const SizedBox(width: 8),
-                    Text(note.filename, style: const TextStyle(fontFamily: 'monospace', fontSize: 10, color: Color(0xFF94A3B8))),
-                  ],
+                Text(
+                  note.filename,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 10.5,
+                    color: Color(0xFF94A3B8),
+                  ),
                 ),
-                Container(margin: const EdgeInsets.symmetric(vertical: 8), height: 1, color: const Color(0xFF334155)),
-                Text(note.wrongCode, style: const TextStyle(fontFamily: 'monospace', fontSize: 11.5, color: Color(0xFFFB7185))),
+                const SizedBox(height: 6),
+                Text(
+                  '- ${note.wrongCode}',
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 11.5,
+                    color: AppColors.rose300,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(note.correctCode, style: const TextStyle(fontFamily: 'monospace', fontSize: 11.5, color: Color(0xFF34D399))),
+                Text(
+                  '+ ${note.correctCode}',
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 11.5,
+                    color: Color(0xFF6EE7B7),
+                  ),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.lightbulb, size: 17, color: Color(0xFFF59E0B)),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    style: const TextStyle(fontSize: 12, color: AppColors.slate700, height: 1.5),
-                    children: [
-                      const TextSpan(text: 'Solusi: ', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.slate900)),
-                      TextSpan(text: note.solutionText),
-                    ],
+          Container(
+            padding: const EdgeInsets.all(11),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF1E293B).withOpacity(0.65)
+                  : Colors.white.withOpacity(0.58),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.glassBorder,
+                width: 1.1,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.lightbulb_outline_rounded,
+                  size: 17,
+                  color: AppColors.sky600,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    note.solutionText,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.slate700,
+                      height: 1.45,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
-
-  Widget _tinyBadge(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: AppColors.slate100, borderRadius: BorderRadius.circular(4)),
-      child: Text(text, style: const TextStyle(fontFamily: 'monospace', fontSize: 10, color: AppColors.slate600)),
-    );
-  }
-
-  Widget _dot(Color color) => Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
 }

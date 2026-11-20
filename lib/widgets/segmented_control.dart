@@ -6,7 +6,7 @@ import '../theme/app_colors.dart';
 class SegmentedOption {
   final IconData icon;
   final String label;
-  const SegmentedOption({required this.icon, required this.label});
+  SegmentedOption({required this.icon, required this.label});
 }
 
 /// Toggle pill bersegmen, generic — bisa dipakai untuk 2 opsi
@@ -14,7 +14,7 @@ class SegmentedOption {
 ///
 /// ```dart
 /// SegmentedControl(
-///   options: const [
+///   options: [
 ///     SegmentedOption(icon: Icons.difference, label: 'Diff Viewer'),
 ///     SegmentedOption(icon: Icons.splitscreen, label: 'Komparasi'),
 ///   ],
@@ -27,7 +27,7 @@ class SegmentedControl extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onChanged;
 
-  const SegmentedControl({
+  SegmentedControl({
     super.key,
     required this.options,
     required this.selectedIndex,
@@ -37,7 +37,7 @@ class SegmentedControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.slate200.withOpacity(0.7),
         borderRadius: BorderRadius.circular(12),
@@ -51,8 +51,8 @@ class SegmentedControl extends StatelessWidget {
             child: GestureDetector(
               onTap: () => onChanged(index),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(vertical: 9),
+                duration: Duration(milliseconds: 180),
+                padding: EdgeInsets.symmetric(vertical: 9),
                 decoration: BoxDecoration(
                   color: selected ? Colors.white : Colors.transparent,
                   borderRadius: BorderRadius.circular(9),
@@ -71,7 +71,7 @@ class SegmentedControl extends StatelessWidget {
                       size: 18,
                       color: selected ? AppColors.sky600 : AppColors.slate600,
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       option.label,
                       style: TextStyle(

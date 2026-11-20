@@ -11,7 +11,7 @@ class CodeSpan {
   final bool bold;
   final bool underline;
 
-  const CodeSpan(
+  CodeSpan(
     this.text, {
     this.color,
     this.bold = false,
@@ -30,7 +30,7 @@ class CodeLine {
   /// kata tertentu). Kalau null, `text` ditampilkan polos sesuai [type].
   final List<CodeSpan>? spans;
 
-  const CodeLine({
+  CodeLine({
     required this.number,
     required this.text,
     this.type = CodeLineType.normal,

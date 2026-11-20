@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 /// Kotak editor kode gelap (mirip gaya CodeTerminalCard tapi bisa
-/// diketik). Reusable untuk editor HTML/CSS/JS di Lab Test, atau fitur
-/// "coba sendiri" lain nanti.
+/// diketik). Reusable untuk editor HTML/CSS/JS di Lab Test.
 class CodeEditorField extends StatelessWidget {
   final TextEditingController controller;
   final String filename;
@@ -21,12 +20,17 @@ class CodeEditorField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final editorBg =
+        AppColors.isDark ? const Color(0xFF0B1120) : const Color(0xFF0F172A);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.slate900,
+        color: editorBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accent.withOpacity(0.3)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8)],
+        border: Border.all(color: accent.withOpacity(0.35)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 8),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -46,7 +50,11 @@ class CodeEditorField extends StatelessWidget {
                 const SizedBox(width: 9),
                 Text(
                   filename,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontFamily: 'monospace'),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF94A3B8),
+                    fontFamily: 'monospace',
+                  ),
                 ),
               ],
             ),
@@ -57,13 +65,22 @@ class CodeEditorField extends StatelessWidget {
               controller: controller,
               maxLines: 12,
               minLines: 8,
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'monospace', height: 1.5),
+              style: const TextStyle(
+                color: Color(0xFFF8FAFC),
+                fontSize: 13,
+                fontFamily: 'monospace',
+                height: 1.5,
+              ),
               cursorColor: accent,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 isDense: true,
                 hintText: hintText,
-                hintStyle: const TextStyle(color: Color(0xFF64748B), fontFamily: 'monospace', fontSize: 13),
+                hintStyle: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontFamily: 'monospace',
+                  fontSize: 13,
+                ),
               ),
             ),
           ),
@@ -73,6 +90,10 @@ class CodeEditorField extends StatelessWidget {
   }
 
   Widget _dot(Color color) {
-    return Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
   }
 }

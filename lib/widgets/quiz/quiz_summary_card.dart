@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../glass_morphism_box.dart';
 
-/// Banner "Terkoneksi Rapor Siswa" + kartu ringkasan kuis (semester,
-/// live sync, judul, guru pengampu, 3 metrik cepat).
+/// Banner "Terkoneksi Rapor Siswa" + kartu ringkasan kuis bergaya Liquid Glass.
 class QuizSummaryCard extends StatelessWidget {
   final String semesterLabel;
   final String teacherName;
@@ -12,7 +12,7 @@ class QuizSummaryCard extends StatelessWidget {
   final int totalCount;
   final int streakDays;
 
-  const QuizSummaryCard({
+  QuizSummaryCard({
     super.key,
     this.semesterLabel = 'Semester Ganjil 2024/2025',
     this.teacherName = 'Bpk. Hendra Pratama, M.Kom',
@@ -27,50 +27,67 @@ class QuizSummaryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Banner sinkronisasi rapor
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.slate100,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4)],
-          ),
+        // Banner sinkronisasi rapor kaca ramping
+        GlassMorphismBox(
+          borderRadius: 22,
+          opacity: 0.44,
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           child: Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(color: AppColors.sky600, borderRadius: BorderRadius.circular(8)),
-                child: const Icon(Icons.verified, color: Colors.white, size: 18),
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.sky600, const Color(0xFF6366F1)],
+                  ),
+                  borderRadius: BorderRadius.circular(11),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.sky600.withOpacity(0.25),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Icon(Icons.verified_rounded,
+                    color: Colors.white, size: 18),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 11),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Kuis Terkoneksi Rapor Siswa',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.slate900),
-                        overflow: TextOverflow.ellipsis),
-                    const Text('Nilai otomatis dikonversi ke Nilai Formatif TIK',
-                        style: TextStyle(fontSize: 11, color: AppColors.slate500), overflow: TextOverflow.ellipsis),
+                    Text(
+                      'Kuis Terkoneksi Rapor Siswa',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.slate900,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 1),
+                    Text(
+                      'Nilai otomatis dikonversi ke Nilai Formatif TIK',
+                      style: TextStyle(fontSize: 11, color: AppColors.slate600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
-              const Icon(Icons.cloud_done, color: AppColors.slate500),
+              SizedBox(width: 8),
+              Icon(Icons.cloud_done_rounded,
+                  color: AppColors.sky600, size: 20),
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        // Ringkasan kuis formatif
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6)],
-          ),
+        SizedBox(height: 14),
+        // Kartu ringkasan kuis formatif
+        GlassMorphismBox(
+          borderRadius: 30,
+          opacity: 0.48,
+          padding: EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -78,43 +95,80 @@ class QuizSummaryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: AppColors.sky100, borderRadius: BorderRadius.circular(999)),
-                    child: Text(semesterLabel.toUpperCase(),
-                        style: const TextStyle(
-                            fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.sky700, letterSpacing: 0.4)),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.sky50.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: AppColors.sky200),
+                    ),
+                    child: Text(
+                      semesterLabel.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.sky700,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration:
-                        BoxDecoration(color: AppColors.emerald50, borderRadius: BorderRadius.circular(999)),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.emerald50.withOpacity(0.85),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: AppColors.emerald200),
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.sync, size: 13, color: AppColors.emerald700),
-                        const SizedBox(width: 4),
-                        const Text('LIVE SYNC',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.emerald700)),
+                        Icon(Icons.sync_rounded,
+                            size: 13, color: AppColors.emerald700),
+                        SizedBox(width: 4),
+                        Text(
+                          'LIVE SYNC',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.emerald700,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              const Text('Kuis & Asesmen Mandiri',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.slate900)),
-              const SizedBox(height: 4),
+              SizedBox(height: 12),
+              Text(
+                'Kuis & Asesmen Mandiri',
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.slate900,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.supervisor_account, size: 15, color: AppColors.slate500),
-                  const SizedBox(width: 5),
+                  Icon(Icons.supervisor_account_rounded,
+                      size: 15, color: AppColors.sky600),
+                  SizedBox(width: 5),
                   Expanded(
                     child: Text.rich(
                       TextSpan(
                         text: 'Sinkron dengan Guru: ',
-                        style: const TextStyle(fontSize: 12, color: AppColors.slate500),
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.slate600),
                         children: [
-                          TextSpan(text: teacherName, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.slate700)),
+                          TextSpan(
+                            text: teacherName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.slate800,
+                            ),
+                          ),
                         ],
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -122,11 +176,19 @@ class QuizSummaryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 14),
               Row(
                 children: [
-                  Expanded(child: _metric(averageScore.toStringAsFixed(1), 'Skor Rerata', AppColors.sky600)),
-                  Expanded(child: _metric('$completedCount/$totalCount', 'Tuntas Kuis', AppColors.emerald700, small: '/$totalCount')),
+                  Expanded(
+                    child: _metric(averageScore.toStringAsFixed(1),
+                        'Skor Rerata', AppColors.sky600),
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: _metric('$completedCount/$totalCount', 'Tuntas Kuis',
+                        AppColors.emerald700),
+                  ),
+                  SizedBox(width: 8),
                   Expanded(child: _streakMetric()),
                 ],
               ),
@@ -137,41 +199,70 @@ class QuizSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _metric(String value, String label, Color color, {String? small}) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 3),
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
+  Widget _metric(String value, String label, Color color) {
+    return GlassMorphismBox(
+      borderRadius: 18,
+      opacity: 0.36,
+      blurSigma: 12,
+      padding: EdgeInsets.symmetric(vertical: 11, horizontal: 6),
+      boxShadow: [],
       child: Column(
         children: [
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color)),
-          const SizedBox(height: 2),
-          Text(label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10, color: AppColors.slate500)),
+          Text(
+            value,
+            style: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.w800, color: color),
+          ),
+          SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.slate600,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _streakMetric() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 3),
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
+    return GlassMorphismBox(
+      borderRadius: 18,
+      opacity: 0.36,
+      blurSigma: 12,
+      padding: EdgeInsets.symmetric(vertical: 11, horizontal: 6),
+      boxShadow: [],
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.local_fire_department, size: 16, color: Color(0xFF39B8FD)),
-              const SizedBox(width: 3),
-              Text('$streakDays', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.slate900)),
+              Icon(Icons.local_fire_department_rounded,
+                  size: 17, color: const Color(0xFF39B8FD)),
+              SizedBox(width: 3),
+              Text(
+                '$streakDays',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.slate900,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 2),
-          const Text('Hari Streak', style: TextStyle(fontSize: 10, color: AppColors.slate500)),
+          SizedBox(height: 2),
+          Text(
+            'Hari Streak',
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.slate600,
+            ),
+          ),
         ],
       ),
     );

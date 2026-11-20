@@ -22,7 +22,7 @@ class LearningModule {
   final String quizCount; // KUIS_TIK: 4 Soal
   final String labCount; // LAB_PRAKTIK: 2 Sesi
 
-  const LearningModule({
+  LearningModule({
     required this.code,
     required this.idMateri,
     required this.category,
@@ -53,5 +53,5 @@ class LearningModule {
 class CategoryPill {
   final String label;
   final String value;
-  const CategoryPill({required this.label, required this.value});
+  CategoryPill({required this.label, required this.value});
 }

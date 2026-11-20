@@ -15,7 +15,7 @@ void main() {
   ) async {
     final profile = UserProfile.instance;
     await profile.updateName('Alifia Putri');
-    await tester.pumpWidget(const MaterialApp(home: HomePage()));
+    await tester.pumpWidget(MaterialApp(home: HomePage()));
 
     await profile.updateName('Wynn Putri');
     await tester.pump();
@@ -31,7 +31,7 @@ void main() {
     final profile = UserProfile.instance;
     await profile.updateName('Alifia Putri');
     await profile.updateAvatar(0);
-    await tester.pumpWidget(const MaterialApp(home: ProgresPage()));
+    await tester.pumpWidget(MaterialApp(home: ProgresPage()));
 
     await profile.updateName('Wynn Putri');
     await profile.updateAvatar(6);

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import 'glass_morphism_box.dart';
 
-/// Kartu "modul yang sedang dikerjakan" lengkap dengan progress bar.
 class ActiveModuleCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String remainingTime;
-  final double progress; // 0.0 - 1.0
+  final double progress;
   final VoidCallback? onContinue;
   final VoidCallback? onBookmark;
 
-  const ActiveModuleCard({
+  ActiveModuleCard({
     super.key,
     this.title = 'Modul 01: Mengenal Tag Dasar HTML & Kerangka Web',
     this.subtitle =
@@ -24,18 +24,10 @@ class ActiveModuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.sky50, Colors.white, Color(0xFFEFF6FF)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.sky200),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6)],
-      ),
+    return GlassMorphismBox(
+      borderRadius: 30,
+      opacity: 0.48,
+      padding: EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -43,37 +35,52 @@ class ActiveModuleCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding:
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                    color: AppColors.sky600, borderRadius: BorderRadius.circular(999)),
-                child: const Text(
+                  gradient: LinearGradient(
+                    colors: [AppColors.sky600, const Color(0xFF6366F1)],
+                  ),
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.sky600.withOpacity(0.28),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Text(
                   'MODUL AKTIF',
                   style: TextStyle(
                     fontFamily: 'monospace',
                     color: Colors.white,
                     fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
                   ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding:
+                    EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.amber100.withOpacity(0.7),
+                  color: AppColors.amber50.withOpacity(0.80),
                   borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: AppColors.amber200),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.timer_outlined, size: 15, color: AppColors.amber700),
-                    const SizedBox(width: 4),
+                    Icon(Icons.timer_outlined,
+                        size: 14, color: AppColors.amber700),
+                    SizedBox(width: 4),
                     Text(
                       remainingTime,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'monospace',
                         fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.amber700,
                       ),
                     ),
@@ -82,74 +89,121 @@ class ActiveModuleCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 12),
           Text(
             title,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.slate900),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Penyelesaian Modul',
-                  style: TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.slate600)),
-              Text('${(progress * 100).round()}%',
-                  style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.sky700)),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: AppColors.slate200.withOpacity(0.8),
-              valueColor: const AlwaysStoppedAnimation(AppColors.sky600),
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 15.5,
+              color: AppColors.slate900,
+              height: 1.3,
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 5),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.slate600,
+              height: 1.45,
+            ),
+          ),
+          SizedBox(height: 14),
+          GlassMorphismBox(
+            borderRadius: 20,
+            opacity: 0.35,
+            blurSigma: 12,
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            boxShadow: [],
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Penyelesaian Modul',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.slate600,
+                      ),
+                    ),
+                    Text(
+                      '${(progress * 100).round()}%',
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.sky600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 7),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    backgroundColor: AppColors.slate200.withOpacity(0.75),
+                    valueColor: AlwaysStoppedAnimation(AppColors.sky600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 14),
           Row(
             children: [
               Expanded(
-                child: SizedBox(
-                  height: 40,
+                child: Container(
+                  height: 44,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.sky600, const Color(0xFF6366F1)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.sky600.withOpacity(0.32),
+                        blurRadius: 12,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: ElevatedButton.icon(
                     onPressed: onContinue ?? () {},
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.sky600,
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
                       foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999),
+                      ),
                     ),
-                    icon: const Icon(Icons.play_arrow, size: 18),
-                    label: const Text('Lanjut Belajar',
-                        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+                    icon: Icon(Icons.play_arrow_rounded, size: 20),
+                    label: Text(
+                      'Lanjut Belajar',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               GestureDetector(
                 onTap: onBookmark,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.slate200),
+                child: GlassMorphismBox(
+                  borderRadius: 999,
+                  opacity: 0.55,
+                  padding: EdgeInsets.all(12),
+                  child: Icon(
+                    Icons.bookmark_rounded,
+                    color: AppColors.sky600,
+                    size: 20,
                   ),
-                  child: const Icon(Icons.bookmark, color: AppColors.slate600, size: 20),
                 ),
               ),
             ],

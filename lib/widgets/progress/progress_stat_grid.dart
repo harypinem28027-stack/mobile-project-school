@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../glass_morphism_box.dart';
 
-/// 3 kartu statistik ringkas: modul on-track, jumlah bug diperbaiki,
-/// dan id progres siswa.
+/// 2 kartu statistik utama bergaya Liquid Glass: Modul Selesai dan Bug Diperbaiki.
 class ProgressStatGrid extends StatelessWidget {
   final String onTrackValue; // "18/24"
   final String fixCount; // "14"
-  final String progressId; // "409" -> ditampilkan sbg PRG-409
+  final String progressId;
 
-  const ProgressStatGrid({
+  ProgressStatGrid({
     super.key,
     this.onTrackValue = '18/24',
     this.fixCount = '14',
@@ -20,43 +20,82 @@ class ProgressStatGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _statCard(Icons.check_circle, onTrackValue, 'On-Track', 'Modul TIK', AppColors.emerald700, AppColors.emerald50)),
-        const SizedBox(width: 10),
-        Expanded(child: _statCard(Icons.build_circle, fixCount, '$fixCount Fix', 'Jml Kesalahan', AppColors.sky600, AppColors.sky50)),
-        const SizedBox(width: 10),
-        Expanded(child: _statCard(Icons.fingerprint, progressId, 'PRG-$progressId', 'ID Progress', const Color(0xFF4F46E5), const Color(0xFFEEF2FF), mono: true)),
+        Expanded(
+          child: _statCard(
+            icon: Icons.check_circle_rounded,
+            value: onTrackValue,
+            title: 'Modul Selesai',
+            color: AppColors.emerald700,
+            bg: AppColors.emerald50,
+          ),
+        ),
+        SizedBox(width: 12),
+        Expanded(
+          child: _statCard(
+            icon: Icons.bug_report_rounded,
+            value: '$fixCount Bug',
+            title: 'Berhasil Diperbaiki',
+            color: AppColors.sky600,
+            bg: AppColors.sky50,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _statCard(IconData icon, String value, String label, String sub, Color color, Color bg, {bool mono = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.slate200),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4)],
-      ),
-      child: Column(
+  Widget _statCard({
+    required IconData icon,
+    required String value,
+    required String title,
+    required Color color,
+    required Color bg,
+  }) {
+    return GlassMorphismBox(
+      borderRadius: 24,
+      opacity: 0.48,
+      padding: EdgeInsets.all(14),
+      child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-            child: Icon(icon, size: 18, color: color),
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: bg.withOpacity(0.88),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.9),
+                width: 1.1,
+              ),
+            ),
+            child: Icon(icon, size: 22, color: color),
           ),
-          const SizedBox(height: 6),
-          Text(value,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color, fontFamily: mono ? 'monospace' : null)),
-          const SizedBox(height: 2),
-          Text(label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color, letterSpacing: 0.3)),
-          const SizedBox(height: 1),
-          Text(sub, style: const TextStyle(fontSize: 9, color: AppColors.slate400)),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.slate900,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.slate600,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

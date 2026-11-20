@@ -1,50 +1,119 @@
-
 import 'package:flutter/material.dart';
-import 'register_page.dart';
-import 'home_page.dart';
+import 'package:flutter/services.dart';
+
 import '../services/auth_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/theme_controller.dart';
+import '../widgets/eclipse_theme_toggle.dart';
+import '../widgets/glass_morphism_box.dart';
+import '../widgets/login_mascot_squad.dart';
+import 'home_page.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+
+  late final AnimationController _dropController;
 
   bool isPasswordVisible = false;
   bool rememberMe = true;
   bool isLoading = false;
+  int _nodCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _dropController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 900),
+    )..forward();
+
+    _emailFocus.addListener(_onFocusChanged);
+    _passwordFocus.addListener(_onFocusChanged);
+    emailController.addListener(_onTextTyped);
+    passwordController.addListener(_onTextTyped);
+  }
+
+  void _onFocusChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _onTextTyped() {
+    if (mounted) {
+      setState(() {
+        _nodCount++;
+      });
+    }
+  }
+
+  int get _mascotMood {
+    if (isPasswordVisible) return 2;
+    if (_passwordFocus.hasFocus) return 1;
+    return 0;
+  }
+
+  double get _lookRatio {
+    if (_passwordFocus.hasFocus) {
+      final len = passwordController.text.length;
+      return ((len / 18.0) * 2.0 - 1.0).clamp(-1.0, 1.0);
+    }
+    if (_emailFocus.hasFocus) {
+      final len = emailController.text.length;
+      return ((len / 24.0) * 2.0 - 1.0).clamp(-1.0, 1.0);
+    }
+    return 0.0;
+  }
+
+  Widget _dropItem({
+    required double start,
+    required double end,
+    required Widget child,
+    double dropDistance = 38.0,
+  }) {
+    final curve = CurvedAnimation(
+      parent: _dropController,
+      curve: Interval(start, end, curve: Curves.easeOutBack),
+    );
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: curve,
+        child: child,
+        builder: (context, cachedChild) {
+          return Transform.translate(
+            offset: Offset(0, -(1.0 - curve.value) * dropDistance),
+            child: cachedChild,
+          );
+        },
+      ),
+    );
+  }
 
   Future<void> triggerLogin() async {
-    if (emailController.text.isEmpty ||
+    FocusScope.of(context).unfocus();
+
+    if (emailController.text.trim().isEmpty ||
         passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'NISN/Email dan kata sandi wajib diisi.',
-          ),
-        ),
-      );
+      _showGlassSnack('NISN/Email dan kata sandi wajib diisi.', isError: true);
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
-
-    await Future.delayed(
-      const Duration(seconds: 1),
-    );
+    setState(() => isLoading = true);
+    await Future.delayed(Duration(milliseconds: 550));
 
     if (!mounted) return;
-
-    setState(() {
-      isLoading = false;
-    });
+    setState(() => isLoading = false);
 
     await AuthService.login(
       name: emailController.text.trim(),
@@ -53,35 +122,151 @@ class _LoginPageState extends State<LoginPage> {
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Berhasil masuk!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    HapticFeedback.mediumImpact();
 
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const HomePage()),
+      PageRouteBuilder(
+        transitionDuration: Duration(milliseconds: 360),
+        pageBuilder: (_, __, ___) => HomePage(),
+        transitionsBuilder: (_, animation, __, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          );
+        },
+      ),
       (route) => false,
     );
   }
 
-  void triggerSSO() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Akun Belajar.id'),
-          content: const Text(
-            'Mengarahkan ke Single Sign-On Portal '
-            '(Akun Belajar.id)...',
+  void _showGlassSnack(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 12.5,
+            color: Colors.white,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isError
+            ? const Color(0xFFBE123C)
+            : const Color(0xFF0F172A).withOpacity(0.92),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        margin: EdgeInsets.only(bottom: 24, left: 20, right: 20),
+      ),
+    );
+  }
+
+  void triggerSSO() {
+    HapticFeedback.lightImpact();
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Tutup SSO',
+      barrierColor: Colors.black.withOpacity(0.35),
+      transitionDuration: Duration(milliseconds: 250),
+      pageBuilder: (dialogContext, _, __) {
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 28),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 350),
+              child: Material(
+                color: Colors.transparent,
+                child: GlassMorphismBox(
+                  borderRadius: 28,
+                  opacity: 0.78,
+                  blurSigma: 8,
+                  enableBlur: true,
+                  padding: EdgeInsets.all(22),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.sky50,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.sky200),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'G',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF4285F4),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 14),
+                      Text(
+                        'SSO Akun Belajar.id',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.slate900,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'Mengarahkan ke portal autentikasi Akun Belajar.id / Google sekolah...',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.slate600,
+                          height: 1.45,
+                        ),
+                      ),
+                      SizedBox(height: 18),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 42,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.sky600,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                          child: Text(
+                            'Mengerti',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ],
+          ),
+        );
+      },
+      transitionBuilder: (_, animation, __, child) {
+        final curved =
+            CurvedAnimation(parent: animation, curve: Curves.easeOutBack);
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.90, end: 1.0).animate(curved),
+            child: child,
+          ),
         );
       },
     );
@@ -89,6 +274,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    _dropController.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -96,783 +284,701 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF006194);
-    const surfaceColor = Color(0xFFF8F9FF);
-    const surfaceLow = Color(0xFFEFF4FF);
-    const outlineColor = Color(0xFFBFC7D2);
-    const textColor = Color(0xFF0B1C30);
-    const secondaryText = Color(0xFF3F4850);
+    final mood = _mascotMood;
+    final isDark = ThemeController.instance.isDark;
 
     return Scaffold(
-      backgroundColor: surfaceColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ================= HEADER =================
-            Container(
-              height: 56,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-              ),
-              decoration: BoxDecoration(
-                color: surfaceColor.withOpacity(0.95),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // Logo
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: primaryColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.code,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  const Text(
-                    'DebugTIK',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
-                    ),
-                  ),
-
-                  const SizedBox(width: 6),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE5EEFF),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'V2.4',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: secondaryText,
-                      ),
-                    ),
-                  ),
-
-                  const Spacer(),
-
-                  const Text(
-                    'Sign In',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: secondaryText,
-                    ),
-                  ),
-
-                  const SizedBox(width: 10),
-
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                      color: primaryColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ],
-              ),
+      backgroundColor: AppColors.slate50,
+      body: Stack(
+        children: [
+          Positioned(
+            top: -70,
+            left: -50,
+            child: _AmbientBlob(
+              size: 260,
+              color: AppColors.sky600.withOpacity(isDark ? 0.22 : 0.16),
             ),
+          ),
+          Positioned(
+            top: 220,
+            right: -70,
+            child: _AmbientBlob(
+              size: 250,
+              color: const Color(0xFF6366F1).withOpacity(isDark ? 0.20 : 0.14),
+            ),
+          ),
+          Positioned(
+            bottom: -60,
+            left: 20,
+            child: _AmbientBlob(
+              size: 240,
+              color: const Color(0xFF38BDF8).withOpacity(isDark ? 0.18 : 0.14),
+            ),
+          ),
 
-            // ================= BODY =================
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
+          SafeArea(
+            child: Column(
+              children: [
+                _dropItem(
+                  start: 0.0,
+                  end: 0.45,
+                  dropDistance: 28,
+                  child: _buildGlassHeader(),
                 ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 500,
-                    ),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 24),
-
-                        // ================= GREETING =================
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE5EEFF),
-                            borderRadius:
-                                BorderRadius.circular(30),
-                            border: Border.all(
-                              color: outlineColor.withOpacity(0.3),
-                            ),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.school,
-                                size: 16,
-                                color: primaryColor,
-                              ),
-                              SizedBox(width: 6),
-                              Text(
-                                'PORTAL BELAJAR SISWA TIK',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.5,
-                                  color: primaryColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        const Text(
-                          'Masuk Akun Siswa',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                          ),
-                          child: Text(
-                            'Akses modul interaktif, praktikum debugging, '
-                            'dan catatan live query pembelajaran Anda.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              height: 1.5,
-                              color: secondaryText,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 28),
-
-                        // ================= CARD =================
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius:
-                                BorderRadius.circular(18),
-                            border: Border.all(
-                              color: outlineColor.withOpacity(0.3),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              // ================= ROLE =================
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: surfaceLow,
-                                  borderRadius:
-                                      BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color:
-                                        outlineColor.withOpacity(0.4),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 38,
-                                      height: 38,
-                                      decoration: BoxDecoration(
-                                        color: primaryColor,
-                                        borderRadius:
-                                            BorderRadius.circular(9),
-                                      ),
-                                      child: const Icon(
-                                        Icons.person,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(18, 8, 18, 28),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: 440),
+                        child: Column(
+                          children: [
+                            SizedBox(height: 6),
+                            _dropItem(
+                              start: 0.12,
+                              end: 0.58,
+                              dropDistance: 34,
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Masuk Akun Siswa',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.slate900,
+                                      letterSpacing: -0.4,
                                     ),
+                                  ),
+                                  SizedBox(height: 6),
+                                  Text(
+                                    'Lanjutkan belajar, kuis interaktif, dan latihan kode dalam satu tempat.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      height: 1.45,
+                                      color: AppColors.slate600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 12),
 
-                                    const SizedBox(width: 10),
-
-                                    const Expanded(
+                            Stack(
+                              clipBehavior: Clip.none,
+                              alignment: Alignment.topCenter,
+                              children: [
+                                _dropItem(
+                                  start: 0.30,
+                                  end: 0.82,
+                                  dropDistance: 44,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(top: 100),
+                                    child: GlassMorphismBox(
+                                      borderRadius: 32,
+                                      opacity: isDark ? 0.65 : 0.56,
+                                      padding: EdgeInsets.fromLTRB(
+                                          22, 34, 22, 24),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Row(
-                                            children: [
-                                              Text(
-                                                'Peserta Didik',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight:
-                                                      FontWeight.w600,
-                                                  color: textColor,
-                                                ),
-                                              ),
-                                              SizedBox(width: 6),
-                                              Text(
-                                                'PK: id_siswa',
-                                                style: TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight:
-                                                      FontWeight.w700,
-                                                  color: primaryColor,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 3),
                                           Text(
-                                            'Akses Terverifikasi Dapodik & Lab TIK',
+                                            'NISN atau Email Siswa',
                                             style: TextStyle(
-                                              fontSize: 11,
-                                              color: secondaryText,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.slate800,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    const Icon(
-                                      Icons.verified,
-                                      color: primaryColor,
-                                      size: 20,
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(height: 24),
-
-                              // ================= EMAIL =================
-                              _buildLabel(
-                                'NISN / ID Siswa / Email Siswa',
-                                '[VARCHAR 128]',
-                              ),
-
-                              const SizedBox(height: 7),
-
-                              TextField(
-                                controller: emailController,
-                                keyboardType:
-                                    TextInputType.emailAddress,
-                                decoration: InputDecoration(
-                                  hintText:
-                                      'NISN (10 digit) atau email siswa',
-                                  prefixIcon: const Icon(
-                                    Icons.badge_outlined,
-                                    size: 20,
-                                  ),
-                                  filled: true,
-                                  fillColor: surfaceColor,
-                                  border: _inputBorder(),
-                                  enabledBorder: _inputBorder(),
-                                  focusedBorder:
-                                      _focusedBorder(primaryColor),
-                                ),
-                              ),
-
-                              const SizedBox(height: 6),
-
-                              const Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Masukkan NISN aktif atau email yang terdaftar '
-                                  'pada sistem lab TIK sekolah.',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: secondaryText,
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 20),
-
-                              // ================= PASSWORD =================
-                              Row(
-                                children: [
-                                  const Text(
-                                    'Kata Sandi',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: textColor,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  GestureDetector(
-                                    onTap: () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Fitur lupa kata sandi belum tersedia.',
+                                          SizedBox(height: 8),
+                                          _buildGlassField(
+                                            controller: emailController,
+                                            focusNode: _emailFocus,
+                                            hint:
+                                                'Contoh: 0081234567 atau nama@siswa.id',
+                                            icon: Icons.person_outline_rounded,
+                                            keyboardType:
+                                                TextInputType.emailAddress,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            onSubmitted: (_) =>
+                                                _passwordFocus.requestFocus(),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                    child: const Text(
-                                      'Lupa kata sandi?',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: primaryColor,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
 
-                              const SizedBox(height: 7),
+                                          SizedBox(height: 18),
 
-                              TextField(
-                                controller: passwordController,
-                                obscureText: !isPasswordVisible,
-                                decoration: InputDecoration(
-                                  hintText: 'Masukkan kata sandi',
-                                  prefixIcon: const Icon(
-                                    Icons.lock_outline,
-                                    size: 20,
-                                  ),
-                                  suffixIcon: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        isPasswordVisible =
-                                            !isPasswordVisible;
-                                      });
-                                    },
-                                    icon: Icon(
-                                      isPasswordVisible
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  filled: true,
-                                  fillColor: surfaceColor,
-                                  border: _inputBorder(),
-                                  enabledBorder: _inputBorder(),
-                                  focusedBorder:
-                                      _focusedBorder(primaryColor),
-                                ),
-                              ),
-
-                              const SizedBox(height: 16),
-
-                              // ================= REMEMBER =================
-                              Row(
-                                children: [
-                                  Checkbox(
-                                    value: rememberMe,
-                                    activeColor: primaryColor,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        rememberMe =
-                                            value ?? false;
-                                      });
-                                    },
-                                  ),
-                                  const Text(
-                                    'Ingat saya',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: secondaryText,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 12),
-
-                              // ================= INFO =================
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: surfaceLow.withOpacity(0.8),
-                                  borderRadius:
-                                      BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color:
-                                        outlineColor.withOpacity(0.4),
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    const Icon(
-                                      Icons.schema_outlined,
-                                      color: primaryColor,
-                                      size: 18,
-                                    ),
-
-                                    const SizedBox(width: 10),
-
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
                                           Row(
                                             children: [
-                                              const Text(
-                                                'AUTO-BINDING ERD',
+                                              Text(
+                                                'Kata Sandi',
                                                 style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight:
-                                                      FontWeight.bold,
-                                                  color: primaryColor,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: AppColors.slate800,
                                                 ),
                                               ),
-                                              const SizedBox(width: 7),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets
-                                                        .symmetric(
-                                                  horizontal: 5,
-                                                  vertical: 2,
+                                              Spacer(),
+                                              GestureDetector(
+                                                onTap: () => _showGlassSnack(
+                                                  'Hubungi admin lab TIK sekolah untuk reset sandi.',
                                                 ),
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      const Color(
-                                                    0xFFE5EEFF,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius
-                                                          .circular(4),
-                                                ),
-                                                child: const Text(
-                                                  'FK: progress_belajar',
+                                                child: Text(
+                                                  'Lupa kata sandi?',
                                                   style: TextStyle(
-                                                    fontSize: 8,
-                                                    color:
-                                                        secondaryText,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppColors.sky600,
                                                   ),
                                                 ),
                                               ),
                                             ],
                                           ),
+                                          SizedBox(height: 8),
+                                          _buildGlassField(
+                                            controller: passwordController,
+                                            focusNode: _passwordFocus,
+                                            hint: 'Masukkan kata sandi',
+                                            icon: Icons.lock_outline_rounded,
+                                            obscureText: !isPasswordVisible,
+                                            textInputAction:
+                                                TextInputAction.done,
+                                            onSubmitted: (_) => triggerLogin(),
+                                            suffixIcon: IconButton(
+                                              onPressed: () {
+                                                HapticFeedback.selectionClick();
+                                                setState(() {
+                                                  isPasswordVisible =
+                                                      !isPasswordVisible;
+                                                });
+                                              },
+                                              icon: Icon(
+                                                isPasswordVisible
+                                                    ? Icons.visibility_rounded
+                                                    : Icons
+                                                        .visibility_off_rounded,
+                                                size: 20,
+                                                color: isPasswordVisible
+                                                    ? AppColors.sky600
+                                                    : AppColors.slate500,
+                                              ),
+                                            ),
+                                          ),
 
-                                          const SizedBox(height: 4),
+                                          SizedBox(height: 12),
 
-                                          const Text(
-                                            'Sesi login otomatis memuat riwayat '
-                                            'learning_path dan sinkronisasi log '
-                                            'error praktikum siswa terkini.',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              height: 1.4,
-                                              color: secondaryText,
+                                          GestureDetector(
+                                            onTap: () {
+                                              HapticFeedback.selectionClick();
+                                              setState(() =>
+                                                  rememberMe = !rememberMe);
+                                            },
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                AnimatedContainer(
+                                                  duration: Duration(
+                                                      milliseconds: 180),
+                                                  width: 20,
+                                                  height: 20,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            6),
+                                                    gradient: rememberMe
+                                                        ? LinearGradient(
+                                                            colors: [
+                                                              AppColors.sky600,
+                                                              Color(
+                                                                  0xFF6366F1),
+                                                            ],
+                                                          )
+                                                        : null,
+                                                    color: rememberMe
+                                                        ? null
+                                                        : AppColors.glassFill
+                                                            .withOpacity(0.75),
+                                                    border: Border.all(
+                                                      color: rememberMe
+                                                          ? Colors.transparent
+                                                          : AppColors.slate300,
+                                                    ),
+                                                  ),
+                                                  child: rememberMe
+                                                      ? Icon(
+                                                          Icons.check_rounded,
+                                                          size: 14,
+                                                          color: Colors.white,
+                                                        )
+                                                      : null,
+                                                ),
+                                                SizedBox(width: 8),
+                                                Text(
+                                                  'Ingat sesi saya',
+                                                  style: TextStyle(
+                                                    fontSize: 12.5,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: AppColors.slate600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          SizedBox(height: 20),
+
+                                          Container(
+                                            width: double.infinity,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(999),
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  const Color(0xFF4F46E5),
+                                                  const Color(0xFF6366F1),
+                                                ],
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFF4F46E5)
+                                                      .withOpacity(0.32),
+                                                  blurRadius: 14,
+                                                  offset: Offset(0, 5),
+                                                ),
+                                              ],
+                                            ),
+                                            child: ElevatedButton(
+                                              onPressed: isLoading
+                                                  ? null
+                                                  : triggerLogin,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                shadowColor: Colors.transparent,
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          999),
+                                                ),
+                                              ),
+                                              child: isLoading
+                                                  ? Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        SizedBox(
+                                                          width: 18,
+                                                          height: 18,
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                            strokeWidth: 2.2,
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 10),
+                                                        Text(
+                                                          'Memverifikasi...',
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            fontSize: 13.5,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )
+                                                  : Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(
+                                                          'Masuk ke Modul Siswa',
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 8),
+                                                        Icon(
+                                                          Icons
+                                                              .arrow_forward_rounded,
+                                                          size: 18,
+                                                        ),
+                                                      ],
+                                                    ),
+                                            ),
+                                          ),
+
+                                          SizedBox(height: 18),
+
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Divider(
+                                                  color: AppColors.slate300
+                                                      .withOpacity(0.6),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding:
+                                                    EdgeInsets.symmetric(
+                                                        horizontal: 12),
+                                                child: Text(
+                                                  'atau',
+                                                  style: TextStyle(
+                                                    fontSize: 11.5,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: AppColors.slate500,
+                                                  ),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Divider(
+                                                  color: AppColors.slate300
+                                                      .withOpacity(0.6),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+
+                                          SizedBox(height: 16),
+
+                                          SizedBox(
+                                            width: double.infinity,
+                                            height: 46,
+                                            child: OutlinedButton(
+                                              onPressed: triggerSSO,
+                                              style: OutlinedButton.styleFrom(
+                                                backgroundColor:
+                                                    AppColors.glassFill
+                                                        .withOpacity(0.65),
+                                                foregroundColor:
+                                                    AppColors.slate800,
+                                                side: BorderSide(
+                                                  color: AppColors.glassBorder,
+                                                  width: 1.2,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          999),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Container(
+                                                    width: 22,
+                                                    height: 22,
+                                                    decoration:
+                                                        BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: Colors.white,
+                                                    ),
+                                                    child: Center(
+                                                      child: Text(
+                                                        'G',
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          color:
+                                                              const Color(0xFF4285F4),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: 10),
+                                                  Text(
+                                                    'Masuk dengan Belajar.id',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              ),
 
-                              const SizedBox(height: 14),
-
-                              // ================= LOGIN BUTTON =================
-                              SizedBox(
-                                width: double.infinity,
-                                height: 46,
-                                child: ElevatedButton(
-                                  onPressed:
-                                      isLoading ? null : triggerLogin,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: primaryColor,
-                                    foregroundColor: Colors.white,
-                                    elevation: 1,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(12),
+                                Positioned(
+                                  top: 0,
+                                  child: _dropItem(
+                                    start: 0.22,
+                                    end: 0.72,
+                                    dropDistance: 52,
+                                    child: LoginMascotSquad(
+                                      mood: mood,
+                                      lookRatio: _lookRatio,
+                                      nodTrigger: _nodCount,
                                     ),
                                   ),
-                                  child: isLoading
-                                      ? const Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: 20),
+
+                            // Pil Liquid Glass "Belum punya akun siswa? Aktivasi Sekarang"
+                            _dropItem(
+                              start: 0.45,
+                              end: 1.0,
+                              dropDistance: 24,
+                              child: GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => RegisterPage(),
+                                    ),
+                                  );
+                                },
+                                child: GlassMorphismBox(
+                                  borderRadius: 999,
+                                  opacity: isDark ? 0.65 : 0.56,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 10,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Belum punya akun siswa?',
+                                        style: TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.slate600,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 11,
+                                          vertical: 5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(999),
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              const Color(0xFF4F46E5),
+                                              const Color(0xFF6366F1),
+                                            ],
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF4F46E5)
+                                                  .withOpacity(0.28),
+                                              blurRadius: 8,
+                                              offset: Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            SizedBox(
-                                              width: 18,
-                                              height: 18,
-                                              child:
-                                                  CircularProgressIndicator(
-                                                strokeWidth: 2,
+                                            Text(
+                                              'Aktivasi Sekarang',
+                                              style: TextStyle(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.w700,
                                                 color: Colors.white,
                                               ),
                                             ),
-                                            SizedBox(width: 10),
-                                            Text(
-                                              'Mengautentikasi...',
-                                              style: TextStyle(
-                                                fontWeight:
-                                                    FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      : const Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              'Masuk ke Modul Siswa',
-                                              style: TextStyle(
-                                                fontWeight:
-                                                    FontWeight.w600,
-                                              ),
-                                            ),
-                                            SizedBox(width: 8),
+                                            SizedBox(width: 4),
                                             Icon(
-                                              Icons.arrow_forward,
-                                              size: 18,
+                                              Icons.arrow_forward_rounded,
+                                              size: 13,
+                                              color: Colors.white,
                                             ),
                                           ],
-                                        ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 24),
-
-                              // ================= DIVIDER =================
-                              Row(
-                                children: [
-                                  const Expanded(
-                                    child: Divider(
-                                      color: Color(0xFFDCE9FF),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    child: Text(
-                                      'atau masuk dengan',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: secondaryText,
-                                      ),
-                                    ),
-                                  ),
-                                  const Expanded(
-                                    child: Divider(
-                                      color: Color(0xFFDCE9FF),
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 20),
-
-                              // ================= GOOGLE =================
-                              SizedBox(
-                                width: double.infinity,
-                                height: 46,
-                                child: OutlinedButton(
-                                  onPressed: triggerSSO,
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: textColor,
-                                    side: BorderSide(
-                                      color:
-                                          outlineColor.withOpacity(0.6),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        width: 20,
-                                        height: 20,
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(5),
-                                          color: Colors.white,
-                                        ),
-                                        child: const Center(
-                                          child: Text(
-                                            'G',
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight:
-                                                  FontWeight.bold,
-                                              color:
-                                                  Color(0xFF4285F4),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      const Text(
-                                        'Akun Belajar.id / Google',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ================= REGISTER =================
-                        Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Belum terdaftar sebagai Siswa?',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: secondaryText,
-                              ),
-                            ),
-
-                            const SizedBox(width: 5),
-
-                            TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const RegisterPage(),
-                                  ),
-                                );
-                              },
-                              child: const Row(
-                                children: [
-                                  Text(
-                                    'Aktivasi Akun Siswa',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: primaryColor,
-                                    ),
-                                  ),
-                                  SizedBox(width: 2),
-                                  Icon(
-                                    Icons.open_in_new,
-                                    size: 14,
-                                    color: primaryColor,
-                                  ),
-                                ],
-                              ),
                             ),
                           ],
                         ),
-
-                        const SizedBox(height: 30),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  // ================= HELPER =================
-
-  Widget _buildLabel(String title, String type) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF0B1C30),
+  Widget _buildGlassHeader() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 10, 16, 4),
+      child: Row(
+        children: [
+          GlassMorphismBox(
+            borderRadius: 999,
+            opacity: 0.55,
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [const Color(0xFF4F46E5), const Color(0xFF6366F1)],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.terminal_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'DebugTIK',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.slate900,
+                  ),
+                ),
+                SizedBox(width: 6),
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.sky50,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'EduTIK',
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.sky700,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        Text(
-          type,
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF006194),
+          Spacer(),
+          EclipseThemeToggle(
+            isDark: ThemeController.instance.isDark,
+            onToggle: ThemeController.instance.toggleTheme,
           ),
-        ),
-      ],
-    );
-  }
-
-  OutlineInputBorder _inputBorder() {
-    return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(
-        color: const Color(0xFFBFC7D2).withOpacity(0.5),
+        ],
       ),
     );
   }
 
-  OutlineInputBorder _focusedBorder(Color color) {
-    return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(
-        color: color,
-        width: 1.5,
+  Widget _buildGlassField({
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required String hint,
+    required IconData icon,
+    bool obscureText = false,
+    TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
+    Widget? suffixIcon,
+  }) {
+    final isFocused = focusNode.hasFocus;
+
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: AppColors.glassFill.withOpacity(isFocused ? 0.88 : 0.64),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isFocused ? AppColors.sky600 : AppColors.glassBorder,
+          width: isFocused ? 1.6 : 1.2,
+        ),
+        boxShadow: isFocused
+            ? [
+                BoxShadow(
+                  color: AppColors.sky600.withOpacity(0.14),
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        textInputAction: textInputAction,
+        onSubmitted: onSubmitted,
+        style: TextStyle(
+          fontSize: 13.5,
+          fontWeight: FontWeight.w600,
+          color: AppColors.slate900,
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: AppColors.slate500,
+          ),
+          prefixIcon: Icon(
+            icon,
+            size: 20,
+            color: isFocused ? AppColors.sky600 : AppColors.slate500,
+          ),
+          suffixIcon: suffixIcon,
+          border: InputBorder.none,
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        ),
+      ),
+    );
+  }
+}
+
+class _AmbientBlob extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  _AmbientBlob({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [color, color.withOpacity(0.0)],
+          ),
+        ),
       ),
     );
   }

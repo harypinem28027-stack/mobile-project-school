@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
 import 'package:mobile_project/data/user_profile.dart';
-
 import '../theme/app_colors.dart';
+import 'glass_morphism_box.dart';
 
-/// Baris sapaan "Halo, {nama}" + badge Live Sync + info kelas.
+/// Baris sapaan "Halo, {nama}" + badge Live Sync kaca + info kelas.
 class GreetingSection extends StatelessWidget {
   final String? userName;
   final String className;
 
-  const GreetingSection({
+  GreetingSection({
     super.key,
     this.userName,
     this.className = 'Kelas XI TIK 2 • Pemrograman Web & Logika',
@@ -36,45 +36,45 @@ class GreetingSection extends StatelessWidget {
                 Text.rich(
                   TextSpan(
                     text: 'Halo, $displayName ',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 21,
                       color: AppColors.slate900,
-                      letterSpacing: -0.3,
+                      letterSpacing: -0.4,
                     ),
-                    children: const [TextSpan(text: '👋')],
+                    children: [TextSpan(text: '👋')],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.emerald50,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: AppColors.emerald200.withOpacity(0.6),
-                    ),
-                  ),
+                GlassMorphismBox(
+                  borderRadius: 999,
+                  opacity: 0.52,
+                  blurSigma: 14,
+                  padding: EdgeInsets.symmetric(horizontal: 11, vertical: 5),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
                           color: AppColors.emerald500,
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.emerald500.withOpacity(0.45),
+                              blurRadius: 6,
+                              spreadRadius: 1,
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      const Text(
+                      SizedBox(width: 6),
+                      Text(
                         'Live Sync',
                         style: TextStyle(
                           fontFamily: 'monospace',
                           fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.emerald700,
                         ),
                       ),
@@ -83,17 +83,20 @@ class GreetingSection extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 5),
             Row(
               children: [
-                const Icon(Icons.school, size: 16, color: AppColors.sky600),
-                const SizedBox(width: 6),
-                Text(
-                  className,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.slate600,
+                Icon(Icons.school_rounded, size: 15, color: AppColors.sky600),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    className,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.slate600,
+                    ),
                   ),
                 ),
               ],

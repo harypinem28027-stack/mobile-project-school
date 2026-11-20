@@ -14,7 +14,7 @@ class CodeTerminalCard extends StatelessWidget {
   final List<CodeLine> codeLines;
   final Widget? footer;
 
-  const CodeTerminalCard({
+  CodeTerminalCard({
     super.key,
     required this.title,
     required this.filename,
@@ -38,7 +38,7 @@ class CodeTerminalCard extends StatelessWidget {
         children: [
           _buildTitleBar(),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(12),
             child: Column(children: codeLines.map(_buildLine).toList()),
           ),
           if (footer != null) footer!,
@@ -50,29 +50,29 @@ class CodeTerminalCard extends StatelessWidget {
   Widget _buildTitleBar() {
     return Container(
       height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: EdgeInsets.symmetric(horizontal: 14),
       color: const Color(0xFF020617),
       child: Row(
         children: [
           Row(
             children: [
               _dot(accent),
-              const SizedBox(width: 5),
+              SizedBox(width: 5),
               _dot(const Color(0xFFF59E0B)),
-              const SizedBox(width: 5),
+              SizedBox(width: 5),
               _dot(const Color(0xFF475569)),
             ],
           ),
-          const SizedBox(width: 9),
+          SizedBox(width: 9),
           Text(
             title,
             style: TextStyle(
                 fontSize: 11, fontWeight: FontWeight.w700, color: accent, letterSpacing: 0.7),
           ),
-          const Spacer(),
+          Spacer(),
           Text(
             filename,
-            style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontFamily: 'monospace'),
+            style: TextStyle(fontSize: 10, color: const Color(0xFF94A3B8), fontFamily: 'monospace'),
           ),
         ],
       ),
@@ -93,7 +93,7 @@ class CodeTerminalCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 6),
+      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 6),
       decoration: BoxDecoration(
         color: error
             ? const Color(0x33F43F5E)
@@ -102,9 +102,9 @@ class CodeTerminalCard extends StatelessWidget {
                 : Colors.transparent,
         borderRadius: BorderRadius.circular(4),
         border: error
-            ? const Border(left: BorderSide(color: Color(0xFFF43F5E), width: 2))
+            ? Border(left: BorderSide(color: const Color(0xFFF43F5E), width: 2))
             : success
-                ? const Border(left: BorderSide(color: Color(0xFF10B981), width: 2))
+                ? Border(left: BorderSide(color: const Color(0xFF10B981), width: 2))
                 : null,
       ),
       child: Row(
@@ -126,7 +126,7 @@ class CodeTerminalCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(child: _buildText(line)),
         ],
       ),
@@ -137,7 +137,7 @@ class CodeTerminalCard extends StatelessWidget {
     if (line.spans != null) {
       return RichText(
         text: TextSpan(
-          style: const TextStyle(fontSize: 12, fontFamily: 'monospace', color: Colors.white),
+          style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: Colors.white),
           children: line.spans!
               .map((s) => TextSpan(
                     text: s.text,
@@ -155,7 +155,7 @@ class CodeTerminalCard extends StatelessWidget {
     }
     return Text(
       line.text,
-      style: const TextStyle(fontSize: 12, fontFamily: 'monospace', color: Color(0xFFE2E8F0)),
+      style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: const Color(0xFFE2E8F0)),
     );
   }
 }
@@ -169,7 +169,7 @@ class CodeFeedbackFooter extends StatelessWidget {
   final String message;
   final String? trailing;
 
-  const CodeFeedbackFooter({
+  CodeFeedbackFooter({
     super.key,
     required this.icon,
     required this.color,
@@ -183,13 +183,13 @@ class CodeFeedbackFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       color: background,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: color, size: 18),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,7 +203,7 @@ class CodeFeedbackFooter extends StatelessWidget {
                         color: color,
                         fontFamily: 'monospace'),
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                 ],
                 Text(
                   message,

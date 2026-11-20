@@ -74,7 +74,7 @@ final List<LearningModule> kModules = [
   ),
 ];
 
-const List<CategoryPill> kCategoryPills = [
+List<CategoryPill> kCategoryPills = [
   CategoryPill(label: 'Semua', value: 'all'),
   CategoryPill(label: 'HTML Dasar', value: 'html'),
   CategoryPill(label: 'CSS Dasar', value: 'css'),

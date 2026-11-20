@@ -7,6 +7,7 @@ import '../models/learning_module.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/category_pills.dart';
+import '../widgets/glass_morphism_box.dart';
 import '../widgets/main_scaffold.dart';
 import '../widgets/progress/bug_note_card.dart';
 import '../widgets/progress/progress_stat_grid.dart';
@@ -14,28 +15,37 @@ import '../widgets/progress/student_profile_card.dart';
 import '../widgets/progress/weekly_activity_card.dart';
 import 'login_page.dart';
 
-const List<CategoryPill> _kBugFilterPills = [
-  CategoryPill(label: 'Semua Catatan', value: 'all'),
+List<CategoryPill> _kBugFilterPills = [
+  CategoryPill(label: 'Semua', value: 'all'),
   CategoryPill(label: 'HTML', value: 'html'),
   CategoryPill(label: 'CSS', value: 'css'),
-  CategoryPill(label: 'JavaScript/Dasar', value: 'js'),
+  CategoryPill(label: 'JS/Dasar', value: 'js'),
 ];
 
-/// Halaman Progres (tab index 3). Diambil dari fixpls/progress_page.dart
-/// (HTML), dipecah jadi widget reusable di widgets/progress/.
 class ProgresPage extends StatefulWidget {
-  const ProgresPage({super.key});
+  ProgresPage({super.key});
 
   @override
   State<ProgresPage> createState() => _ProgresPageState();
 }
 
-class _ProgresPageState extends State<ProgresPage> {
+class _ProgresPageState extends State<ProgresPage>
+    with SingleTickerProviderStateMixin {
   String _selectedFilter = 'all';
+  late final AnimationController _entranceController;
 
   @override
   void initState() {
     super.initState();
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 800),
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _entranceController.forward();
+    });
+
     UserProfile.instance.addListener(_onProfileChanged);
   }
 
@@ -45,8 +55,40 @@ class _ProgresPageState extends State<ProgresPage> {
 
   @override
   void dispose() {
+    _entranceController.dispose();
     UserProfile.instance.removeListener(_onProfileChanged);
     super.dispose();
+  }
+
+  /// Animasi geser bergiliran ringan (GPU-friendly) senada dengan HomePage.
+  Widget _staggerSlide({
+    required double start,
+    required double end,
+    required Widget child,
+    double slideDistance = 72.0,
+  }) {
+    final curve = CurvedAnimation(
+      parent: _entranceController,
+      curve: Interval(
+        start.clamp(0.0, 0.90),
+        end.clamp(0.10, 1.0),
+        curve: Curves.easeOutQuart,
+      ),
+    );
+
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: curve,
+        child: child,
+        builder: (context, cachedChild) {
+          final offsetX = (1.0 - curve.value) * slideDistance;
+          return Transform.translate(
+            offset: Offset(offsetX, 0),
+            child: cachedChild,
+          );
+        },
+      ),
+    );
   }
 
   List<BugNote> get _filteredNotes {
@@ -57,32 +99,141 @@ class _ProgresPageState extends State<ProgresPage> {
   void _showToast(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+        ),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.slate900,
+        backgroundColor: AppColors.slate900.withOpacity(0.92),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-        margin: const EdgeInsets.only(bottom: 80, left: 40, right: 40),
+        margin: EdgeInsets.only(bottom: 96, left: 20, right: 20),
       ),
     );
   }
 
   Future<void> _confirmLogout() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showGeneralDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Keluar Akun?'),
-        content: const Text('Kamu perlu login ulang untuk mengakses DebugTIK lagi.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Batal'),
+      barrierDismissible: true,
+      barrierLabel: 'Batal Keluar',
+      barrierColor: AppColors.slate900.withOpacity(0.28),
+      transitionDuration: Duration(milliseconds: 240),
+      pageBuilder: (dialogContext, _, __) {
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 28),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 350),
+              child: Material(
+                color: Colors.transparent,
+                child: GlassMorphismBox(
+                  borderRadius: 28,
+                  opacity: 0.72,
+                  blurSigma: 8,
+                  enableBlur: true,
+                  padding: EdgeInsets.all(22),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF1F2),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFFECDD3)),
+                        ),
+                        child: Icon(
+                          Icons.logout_rounded,
+                          color: const Color(0xFFE11D48),
+                          size: 22,
+                        ),
+                      ),
+                      SizedBox(height: 14),
+                      Text(
+                        'Keluar Akun?',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.slate900,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'Kamu perlu login ulang untuk mengakses DebugTIK lagi.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.slate600,
+                          height: 1.4,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () =>
+                                  Navigator.pop(dialogContext, false),
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: Colors.white.withOpacity(0.6),
+                                foregroundColor: AppColors.slate700,
+                                side:
+                                    BorderSide(color: AppColors.slate300),
+                                padding:
+                                    EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                              ),
+                              child: Text(
+                                'Batal',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () =>
+                                  Navigator.pop(dialogContext, true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE11D48),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding:
+                                    EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                              ),
+                              child: Text(
+                                'Keluar',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Keluar', style: TextStyle(color: Colors.red)),
+        );
+      },
+      transitionBuilder: (_, animation, __, child) {
+        final curved =
+            CurvedAnimation(parent: animation, curve: Curves.easeOutBack);
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.90, end: 1.0).animate(curved),
+            child: child,
           ),
-        ],
-      ),
+        );
+      },
     );
 
     if (confirmed != true) return;
@@ -91,7 +242,7 @@ class _ProgresPageState extends State<ProgresPage> {
     if (!mounted) return;
 
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
+      MaterialPageRoute(builder: (_) => LoginPage()),
       (route) => false,
     );
   }
@@ -99,89 +250,211 @@ class _ProgresPageState extends State<ProgresPage> {
   @override
   Widget build(BuildContext context) {
     final notes = _filteredNotes;
+    final bottomSpace = MediaQuery.of(context).padding.bottom + 108;
 
     return MainScaffold(
       currentIndex: 3,
       headerSubtitle: 'Progres Belajar',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, bottomSpace),
         children: [
-          StudentProfileCard(
-            studentName: UserProfile.instance.name,
-            studentEmail: UserProfile.instance.email,
-            avatar: UserProfile.instance.avatar,
+          _staggerSlide(
+            start: 0.00,
+            end: 0.42,
+            slideDistance: 60,
+            child: StudentProfileCard(
+              studentName: UserProfile.instance.name,
+              studentEmail: UserProfile.instance.email,
+              avatar: UserProfile.instance.avatar,
+            ),
           ),
-          const SizedBox(height: 14),
-          const ProgressStatGrid(),
-          const SizedBox(height: 14),
-          const WeeklyActivityCard(),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: const [
-                  Icon(Icons.auto_stories, size: 18, color: AppColors.sky600),
-                  SizedBox(width: 8),
-                  Text('Buku Catatan Bug', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.slate900)),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: AppColors.slate100, borderRadius: BorderRadius.circular(999), border: Border.all(color: AppColors.slate200)),
-                child: Text('${kBugNotes.length} Catatan', style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: AppColors.slate600)),
-              ),
-            ],
+          SizedBox(height: 12),
+          _staggerSlide(
+            start: 0.07,
+            end: 0.48,
+            slideDistance: 72,
+            child: ProgressStatGrid(),
           ),
-          const SizedBox(height: 10),
-          CategoryPills(
-            selectedValue: _selectedFilter,
-            onSelected: (v) => setState(() => _selectedFilter = v),
-            pills: _kBugFilterPills,
+          SizedBox(height: 12),
+          _staggerSlide(
+            start: 0.14,
+            end: 0.56,
+            slideDistance: 84,
+            child: WeeklyActivityCard(),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 20),
+          _staggerSlide(
+            start: 0.21,
+            end: 0.64,
+            slideDistance: 92,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 2),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Catatan Bug',
+                            style: TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.slate900,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          GlassMorphismBox(
+                            borderRadius: 999,
+                            opacity: 0.58,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 2),
+                            boxShadow: [],
+                            child: Text(
+                              '${kBugNotes.length}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.sky600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      GestureDetector(
+                        onTap: () =>
+                            _showToast('Membuka formulir catatan bug baru...'),
+                        child: GlassMorphismBox(
+                          borderRadius: 999,
+                          opacity: 0.58,
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+                          boxShadow: [],
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add_rounded,
+                                  size: 16, color: AppColors.sky600),
+                              SizedBox(width: 4),
+                              Text(
+                                'Tambah',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.sky700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                CategoryPills(
+                  selectedValue: _selectedFilter,
+                  onSelected: (v) => setState(() => _selectedFilter = v),
+                  pills: _kBugFilterPills,
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 12),
           if (notes.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: Text('Belum ada catatan bug untuk kategori ini.', style: TextStyle(color: AppColors.slate500, fontSize: 13))),
+            _staggerSlide(
+              start: 0.28,
+              end: 0.74,
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 28),
+                child: Center(
+                  child: Text(
+                    'Belum ada catatan bug di kategori ini.',
+                    style: TextStyle(color: AppColors.slate500, fontSize: 13),
+                  ),
+                ),
+              ),
             )
           else
-            ...notes.map((n) => Padding(padding: const EdgeInsets.only(bottom: 12), child: BugNoteCard(note: n))),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton.icon(
-              onPressed: () => _showToast('Membuka formulir catatan bug baru...'),
-              icon: const Icon(Icons.add_circle, size: 20),
-              label: const Text('Tambah Catatan Bug Baru', style: TextStyle(fontWeight: FontWeight.w600)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.sky600,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ...List.generate(notes.length, (index) {
+              final start = (0.28 + index * 0.08).clamp(0.0, 0.62);
+              final end = (start + 0.36).clamp(0.36, 1.0);
+
+              return _staggerSlide(
+                start: start,
+                end: end,
+                slideDistance: 105,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: BugNoteCard(note: notes[index]),
+                ),
+              );
+            }),
+          SizedBox(height: 8),
+          _staggerSlide(
+            start: 0.50,
+            end: 0.94,
+            slideDistance: 92,
+            child: GestureDetector(
+              onTap: () => _showToast('Menyiapkan Rekap Tugas TIK (PDF)...'),
+              child: GlassMorphismBox(
+                borderRadius: 999,
+                opacity: 0.56,
+                padding: EdgeInsets.symmetric(vertical: 13, horizontal: 18),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.download_rounded,
+                        size: 19, color: AppColors.sky600),
+                    SizedBox(width: 8),
+                    Text(
+                      'Unduh Rekap Progres (PDF)',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.slate800,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: OutlinedButton.icon(
-              onPressed: () => _showToast('Menyiapkan Rekap Nilai & Debug TIK (PDF)...'),
-              icon: const Icon(Icons.picture_as_pdf, size: 20, color: Color(0xFFF43F5E)),
-              label: const Text('Unduh Rekap Tugas TIK (PDF)', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.slate700)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.slate300),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          SizedBox(height: 12),
+          _staggerSlide(
+            start: 0.58,
+            end: 1.00,
+            slideDistance: 84,
+            child: Center(
+              child: GestureDetector(
+                onTap: _confirmLogout,
+                child: GlassMorphismBox(
+                  borderRadius: 999,
+                  opacity: 0.52,
+                  tintColor: const Color(0xFFFFF1F2),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                  boxShadow: [],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.logout_rounded,
+                          size: 16, color: const Color(0xFFE11D48)),
+                      SizedBox(width: 6),
+                      Text(
+                        'Keluar Akun',
+                        style: TextStyle(
+                          color: const Color(0xFFE11D48),
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Center(
-            child: TextButton.icon(
-              onPressed: _confirmLogout,
-              icon: const Icon(Icons.logout, size: 18, color: Colors.red),
-              label: const Text('Keluar Akun', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
